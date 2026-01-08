@@ -59,6 +59,7 @@ class Fatture_Regime_Forfettario {
         require_once FRF_PLUGIN_DIR . 'includes/class-frf-invoice.php';
         require_once FRF_PLUGIN_DIR . 'includes/class-frf-client.php';
         require_once FRF_PLUGIN_DIR . 'includes/class-frf-settings.php';
+        require_once FRF_PLUGIN_DIR . 'includes/class-frf-pdf-generator.php';
         
         // Admin classes
         if (is_admin()) {

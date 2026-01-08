@@ -23,6 +23,11 @@ class FRF_Admin {
         add_action('admin_menu', array($this, 'add_admin_menu'));
         add_action('admin_enqueue_scripts', array($this, 'enqueue_scripts'));
         add_action('admin_init', array($this, 'handle_actions'));
+
+        // AJAX Actions
+        add_action('wp_ajax_frf_export_invoice_pdf', array($this, 'ajax_export_pdf'));
+        add_action('wp_ajax_frf_change_invoice_status', array($this, 'ajax_change_status'));
+        add_action('wp_ajax_frf_search_clients', array($this, 'ajax_search_clients'));
     }
     
     /**
@@ -225,5 +230,88 @@ class FRF_Admin {
         $recent_invoices = $invoice->get_all(array('limit' => 5, 'orderby' => 'created_at', 'order' => 'DESC'));
         
         include FRF_PLUGIN_DIR . 'admin/views/dashboard.php';
+    }
+
+    /**
+     * Handle PDF export via AJAX
+     */
+    public function ajax_export_pdf() {
+        check_ajax_referer('frf_admin_nonce', 'nonce');
+        
+        if (!current_user_can('manage_options')) {
+            wp_die(__('Accesso non autorizzato', 'fatture-rf'));
+        }
+        
+        if (!isset($_GET['invoice_id'])) {
+            wp_die(__('ID fattura non valido', 'fatture-rf'));
+        }
+        
+        $invoice_id = intval($_GET['invoice_id']);
+        
+        // Load PDF generator
+        require_once FRF_PLUGIN_DIR . 'includes/class-frf-pdf-generator.php';
+        
+        $pdf_generator = new FRF_PDF_Generator();
+        $result = $pdf_generator->generate($invoice_id);
+        
+        if (is_wp_error($result)) {
+            wp_die($result->get_error_message());
+        }
+        
+        exit;
+    }
+
+    /**
+     * Handle invoice status change via AJAX
+     */
+    public function ajax_change_status() {
+        check_ajax_referer('frf_admin_nonce', 'nonce');
+        
+        if (!current_user_can('manage_options')) {
+            wp_send_json_error(array('message' => __('Accesso non autorizzato', 'fatture-rf')));
+        }
+        
+        $invoice_id = intval($_POST['invoice_id']);
+        $new_status = sanitize_text_field($_POST['status']);
+        
+        $invoice_model = new FRF_Invoice();
+        $result = $invoice_model->update($invoice_id, array('status' => $new_status));
+        
+        if (is_wp_error($result)) {
+            wp_send_json_error(array('message' => $result->get_error_message()));
+        }
+        
+        wp_send_json_success(array('message' => __('Stato aggiornato con successo', 'fatture-rf')));
+    }
+
+    /**
+     * Handle client search via AJAX
+     */
+    public function ajax_search_clients() {
+        check_ajax_referer('frf_admin_nonce', 'nonce');
+        
+        if (!current_user_can('manage_options')) {
+            wp_send_json_error(array('message' => __('Accesso non autorizzato', 'fatture-rf')));
+        }
+        
+        $search = sanitize_text_field($_POST['search']);
+        
+        $client_model = new FRF_Client();
+        $clients = $client_model->get_all(array(
+            'search' => $search,
+            'limit' => 20
+        ));
+        
+        $results = array();
+        foreach ($clients as $client) {
+            $results[] = array(
+                'id' => $client->id,
+                'business_name' => $client->business_name,
+                'vat_number' => $client->vat_number,
+                'city' => $client->city
+            );
+        }
+        
+        wp_send_json_success($results);
     }
 }
