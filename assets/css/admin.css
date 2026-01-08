@@ -1,0 +1,402 @@
+/* Fatture Regime Forfettario - Admin Styles */
+
+/* Dashboard Stats */
+.frf-dashboard-stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 20px;
+    margin: 20px 0;
+}
+
+.frf-stat-card {
+    background: #fff;
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
+    padding: 20px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+}
+
+.frf-stat-card h3 {
+    margin: 0 0 10px 0;
+    font-size: 14px;
+    color: #666;
+    text-transform: uppercase;
+    font-weight: 600;
+}
+
+.frf-stat-value {
+    font-size: 32px;
+    font-weight: bold;
+    color: #2271b1;
+    margin: 0;
+}
+
+.frf-stat-label {
+    font-size: 12px;
+    color: #999;
+    margin-top: 5px;
+}
+
+/* Badges */
+.frf-badge {
+    display: inline-block;
+    padding: 4px 10px;
+    border-radius: 12px;
+    font-size: 12px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.frf-badge-success {
+    background: #d4edda;
+    color: #155724;
+}
+
+.frf-badge-info {
+    background: #d1ecf1;
+    color: #0c5460;
+}
+
+.frf-badge-warning {
+    background: #fff3cd;
+    color: #856404;
+}
+
+.frf-badge-error {
+    background: #f8d7da;
+    color: #721c24;
+}
+
+.frf-badge-secondary {
+    background: #e2e3e5;
+    color: #383d41;
+}
+
+/* Tables */
+.frf-table {
+    width: 100%;
+    background: #fff;
+    border: 1px solid #e0e0e0;
+    border-radius: 4px;
+    border-collapse: collapse;
+}
+
+.frf-table thead {
+    background: #f8f9fa;
+}
+
+.frf-table th {
+    padding: 12px;
+    text-align: left;
+    font-weight: 600;
+    border-bottom: 2px solid #e0e0e0;
+    font-size: 13px;
+}
+
+.frf-table td {
+    padding: 12px;
+    border-bottom: 1px solid #f0f0f0;
+}
+
+.frf-table tbody tr:hover {
+    background: #f8f9fa;
+}
+
+.frf-table tbody tr:last-child td {
+    border-bottom: none;
+}
+
+/* Forms */
+.frf-form-row {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 20px;
+    margin-bottom: 20px;
+}
+
+.frf-form-group {
+    margin-bottom: 20px;
+}
+
+.frf-form-group label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: 600;
+    font-size: 14px;
+}
+
+.frf-form-group input[type="text"],
+.frf-form-group input[type="email"],
+.frf-form-group input[type="number"],
+.frf-form-group input[type="date"],
+.frf-form-group select,
+.frf-form-group textarea {
+    width: 100%;
+    padding: 8px 12px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 14px;
+}
+
+.frf-form-group textarea {
+    min-height: 100px;
+    resize: vertical;
+}
+
+.frf-form-help {
+    display: block;
+    margin-top: 6px;
+    font-size: 12px;
+    color: #666;
+    font-style: italic;
+}
+
+/* Invoice Items Table */
+.frf-invoice-items {
+    background: #fff;
+    border: 1px solid #e0e0e0;
+    border-radius: 4px;
+    padding: 20px;
+    margin: 20px 0;
+}
+
+.frf-invoice-items table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.frf-invoice-items th {
+    padding: 10px;
+    text-align: left;
+    border-bottom: 2px solid #e0e0e0;
+    font-weight: 600;
+}
+
+.frf-invoice-items td {
+    padding: 10px;
+    border-bottom: 1px solid #f0f0f0;
+}
+
+.frf-invoice-items input {
+    width: 100%;
+    padding: 6px 10px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+}
+
+.frf-invoice-items .item-remove {
+    color: #dc3545;
+    cursor: pointer;
+    font-size: 18px;
+}
+
+/* Buttons */
+.frf-button {
+    padding: 8px 16px;
+    border: none;
+    border-radius: 4px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    text-decoration: none;
+    display: inline-block;
+    transition: all 0.2s;
+}
+
+.frf-button-primary {
+    background: #2271b1;
+    color: #fff;
+}
+
+.frf-button-primary:hover {
+    background: #135e96;
+    color: #fff;
+}
+
+.frf-button-secondary {
+    background: #f0f0f1;
+    color: #2c3338;
+}
+
+.frf-button-secondary:hover {
+    background: #dcdcde;
+}
+
+.frf-button-danger {
+    background: #dc3545;
+    color: #fff;
+}
+
+.frf-button-danger:hover {
+    background: #c82333;
+    color: #fff;
+}
+
+/* Actions */
+.frf-actions {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+}
+
+.frf-action-link {
+    color: #2271b1;
+    text-decoration: none;
+    font-size: 13px;
+}
+
+.frf-action-link:hover {
+    text-decoration: underline;
+}
+
+/* Filters */
+.frf-filters {
+    background: #f8f9fa;
+    padding: 15px;
+    border-radius: 4px;
+    margin-bottom: 20px;
+    display: flex;
+    gap: 15px;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+.frf-filters select,
+.frf-filters input {
+    padding: 6px 10px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+}
+
+/* Card */
+.frf-card {
+    background: #fff;
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
+    padding: 20px;
+    margin-bottom: 20px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+}
+
+.frf-card-header {
+    margin-bottom: 15px;
+    padding-bottom: 15px;
+    border-bottom: 1px solid #e0e0e0;
+}
+
+.frf-card-title {
+    margin: 0;
+    font-size: 18px;
+    font-weight: 600;
+}
+
+/* Invoice View */
+.frf-invoice-header {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 40px;
+    margin-bottom: 30px;
+}
+
+.frf-invoice-totals {
+    background: #f8f9fa;
+    padding: 20px;
+    border-radius: 4px;
+    margin-top: 20px;
+}
+
+.frf-total-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 10px 0;
+    border-bottom: 1px solid #e0e0e0;
+}
+
+.frf-total-row:last-child {
+    border-bottom: none;
+    font-weight: bold;
+    font-size: 18px;
+    padding-top: 15px;
+}
+
+/* Status History */
+.frf-status-history {
+    margin-top: 30px;
+}
+
+.frf-history-item {
+    padding: 15px;
+    background: #f8f9fa;
+    border-left: 4px solid #2271b1;
+    margin-bottom: 10px;
+    border-radius: 4px;
+}
+
+.frf-history-date {
+    font-size: 12px;
+    color: #666;
+    margin-bottom: 5px;
+}
+
+.frf-history-change {
+    font-weight: 600;
+}
+
+/* Client Info */
+.frf-client-info {
+    background: #f8f9fa;
+    padding: 15px;
+    border-radius: 4px;
+    margin-bottom: 20px;
+}
+
+.frf-client-info p {
+    margin: 5px 0;
+    font-size: 14px;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .frf-dashboard-stats {
+        grid-template-columns: 1fr;
+    }
+    
+    .frf-form-row {
+        grid-template-columns: 1fr;
+    }
+    
+    .frf-invoice-header {
+        grid-template-columns: 1fr;
+    }
+    
+    .frf-filters {
+        flex-direction: column;
+        align-items: stretch;
+    }
+}
+
+/* Utility Classes */
+.frf-text-right {
+    text-align: right;
+}
+
+.frf-text-center {
+    text-align: center;
+}
+
+.frf-text-muted {
+    color: #666;
+}
+
+.frf-mb-0 {
+    margin-bottom: 0 !important;
+}
+
+.frf-mt-20 {
+    margin-top: 20px;
+}
+
+.frf-hidden {
+    display: none;
+}

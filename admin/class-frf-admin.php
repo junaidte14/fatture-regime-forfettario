@@ -1,0 +1,229 @@
+<?php
+/**
+ * Admin Controller Class
+ * Manages admin interface and menu
+ */
+
+if (!defined('ABSPATH')) {
+    exit;
+}
+
+class FRF_Admin {
+    
+    private static $instance = null;
+    
+    public static function get_instance() {
+        if (null === self::$instance) {
+            self::$instance = new self();
+        }
+        return self::$instance;
+    }
+    
+    private function __construct() {
+        add_action('admin_menu', array($this, 'add_admin_menu'));
+        add_action('admin_enqueue_scripts', array($this, 'enqueue_scripts'));
+        add_action('admin_init', array($this, 'handle_actions'));
+    }
+    
+    /**
+     * Add admin menu
+     */
+    public function add_admin_menu() {
+        // Main menu
+        add_menu_page(
+            __('Fatture RF', 'fatture-rf'),
+            __('Fatture RF', 'fatture-rf'),
+            'manage_options',
+            'fatture-rf',
+            array($this, 'render_dashboard'),
+            'dashicons-media-spreadsheet',
+            30
+        );
+        
+        // Dashboard
+        add_submenu_page(
+            'fatture-rf',
+            __('Dashboard', 'fatture-rf'),
+            __('Dashboard', 'fatture-rf'),
+            'manage_options',
+            'fatture-rf',
+            array($this, 'render_dashboard')
+        );
+        
+        // Invoices
+        add_submenu_page(
+            'fatture-rf',
+            __('Fatture', 'fatture-rf'),
+            __('Fatture', 'fatture-rf'),
+            'manage_options',
+            'fatture-rf-invoices',
+            array('FRF_Admin_Invoices', 'render')
+        );
+        
+        // Clients
+        add_submenu_page(
+            'fatture-rf',
+            __('Clienti', 'fatture-rf'),
+            __('Clienti', 'fatture-rf'),
+            'manage_options',
+            'fatture-rf-clients',
+            array('FRF_Admin_Clients', 'render')
+        );
+        
+        // Settings
+        add_submenu_page(
+            'fatture-rf',
+            __('Impostazioni', 'fatture-rf'),
+            __('Impostazioni', 'fatture-rf'),
+            'manage_options',
+            'fatture-rf-settings',
+            array('FRF_Admin_Settings', 'render')
+        );
+    }
+    
+    /**
+     * Enqueue admin scripts and styles
+     */
+    public function enqueue_scripts($hook) {
+        // Only load on plugin pages
+        if (strpos($hook, 'fatture-rf') === false) {
+            return;
+        }
+        
+        // Styles
+        wp_enqueue_style(
+            'frf-admin-style',
+            FRF_PLUGIN_URL . 'assets/css/admin.css',
+            array(),
+            FRF_VERSION
+        );
+        
+        // Scripts
+        wp_enqueue_script(
+            'frf-admin-script',
+            FRF_PLUGIN_URL . 'assets/js/admin.js',
+            array('jquery'),
+            FRF_VERSION,
+            true
+        );
+        
+        // Localize script
+        wp_localize_script('frf-admin-script', 'frfAdmin', array(
+            'ajaxUrl' => admin_url('admin-ajax.php'),
+            'nonce' => wp_create_nonce('frf_admin_nonce'),
+            'confirmDelete' => __('Sei sicuro di voler eliminare questo elemento?', 'fatture-rf')
+        ));
+    }
+    
+    /**
+     * Handle admin actions
+     */
+    public function handle_actions() {
+        if (!isset($_GET['page']) || strpos($_GET['page'], 'fatture-rf') !== 0) {
+            return;
+        }
+        
+        if (!isset($_GET['action']) || !isset($_GET['_wpnonce'])) {
+            return;
+        }
+        
+        if (!wp_verify_nonce($_GET['_wpnonce'], 'frf_action')) {
+            wp_die(__('Azione non autorizzata', 'fatture-rf'));
+        }
+        
+        $action = sanitize_text_field($_GET['action']);
+        
+        // Handle different actions
+        switch ($action) {
+            case 'delete_invoice':
+                $this->handle_delete_invoice();
+                break;
+            case 'delete_client':
+                $this->handle_delete_client();
+                break;
+        }
+    }
+    
+    /**
+     * Handle invoice deletion
+     */
+    private function handle_delete_invoice() {
+        if (!isset($_GET['id'])) {
+            return;
+        }
+        
+        $invoice_id = intval($_GET['id']);
+        $invoice = new FRF_Invoice();
+        
+        if ($invoice->delete($invoice_id)) {
+            $this->add_admin_notice('success', __('Fattura eliminata con successo', 'fatture-rf'));
+        } else {
+            $this->add_admin_notice('error', __('Errore durante l\'eliminazione della fattura', 'fatture-rf'));
+        }
+        
+        wp_redirect(admin_url('admin.php?page=fatture-rf-invoices'));
+        exit;
+    }
+    
+    /**
+     * Handle client deletion
+     */
+    private function handle_delete_client() {
+        if (!isset($_GET['id'])) {
+            return;
+        }
+        
+        $client_id = intval($_GET['id']);
+        $client = new FRF_Client();
+        
+        $result = $client->delete($client_id);
+        
+        if (is_wp_error($result)) {
+            $this->add_admin_notice('error', $result->get_error_message());
+        } else {
+            $this->add_admin_notice('success', __('Cliente eliminato con successo', 'fatture-rf'));
+        }
+        
+        wp_redirect(admin_url('admin.php?page=fatture-rf-clients'));
+        exit;
+    }
+    
+    /**
+     * Add admin notice
+     */
+    private function add_admin_notice($type, $message) {
+        add_settings_error('frf_messages', 'frf_message', $message, $type);
+    }
+    
+    /**
+     * Render dashboard
+     */
+    public function render_dashboard() {
+        global $wpdb;
+        
+        $invoice = new FRF_Invoice();
+        $client = new FRF_Client();
+        
+        // Get statistics
+        $invoices_table = FRF_Database::get_table_name('invoices');
+        
+        $stats = $wpdb->get_row("
+            SELECT 
+                COUNT(*) as total_invoices,
+                SUM(CASE WHEN status = 'paid' THEN 1 ELSE 0 END) as paid_invoices,
+                SUM(CASE WHEN status = 'draft' THEN 1 ELSE 0 END) as draft_invoices,
+                SUM(CASE WHEN status = 'sent' THEN 1 ELSE 0 END) as sent_invoices,
+                SUM(total) as total_amount,
+                SUM(CASE WHEN status = 'paid' THEN total ELSE 0 END) as paid_amount,
+                SUM(CASE WHEN status IN ('sent', 'overdue') THEN total ELSE 0 END) as outstanding_amount
+            FROM {$invoices_table}
+        ");
+        
+        $total_clients = $wpdb->get_var("SELECT COUNT(*) FROM " . FRF_Database::get_table_name('clients'));
+        
+        // Recent invoices
+        $recent_invoices = $invoice->get_all(array('limit' => 5, 'orderby' => 'created_at', 'order' => 'DESC'));
+        
+        include FRF_PLUGIN_DIR . 'admin/views/dashboard.php';
+    }
+}
