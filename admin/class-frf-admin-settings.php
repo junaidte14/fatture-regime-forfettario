@@ -76,9 +76,9 @@ class FRF_Admin_Settings {
             add_settings_error('frf_messages', 'frf_message', $validation->get_error_message(), 'error');
         } else {
             if ($settings->update($new_settings)) {
-                add_settings_error('frf_messages', 'frf_message', __('Impostazioni salvate con successo', 'fatture-rf'), 'success');
+                add_settings_error('frf_messages', 'frf_message', __('Settings saved successfully', 'fatture-rf'), 'success');
             } else {
-                add_settings_error('frf_messages', 'frf_message', __('Errore durante il salvataggio', 'fatture-rf'), 'error');
+                add_settings_error('frf_messages', 'frf_message', __('Error saving', 'fatture-rf'), 'error');
             }
         }
     }
@@ -88,8 +88,8 @@ class FRF_Admin_Settings {
      */
     public static function render_tabs($current_tab) {
         $tabs = array(
-            'general' => __('Generale', 'fatture-rf'),
-            'invoices' => __('Fatture', 'fatture-rf'),
+            'general' => __('General', 'fatture-rf'),
+            'invoices' => __('Invoices', 'fatture-rf'),
             'regime' => __('Regime Forfettario', 'fatture-rf'),
             'email' => __('Email', 'fatture-rf')
         );

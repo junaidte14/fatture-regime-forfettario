@@ -25,7 +25,7 @@ class FRF_PDF_Generator {
         $this->invoice = $invoice_model->get($invoice_id);
         
         if (!$this->invoice) {
-            return new WP_Error('not_found', __('Fattura non trovata', 'fatture-rf'));
+            return new WP_Error('not_found', __('Invoice not found', 'fatture-rf'));
         }
         
         // Load client

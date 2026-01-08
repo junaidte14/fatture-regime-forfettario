@@ -10,9 +10,9 @@ if (!defined('ABSPATH')) {
 ?>
 
 <div class="wrap">
-    <h1 class="wp-heading-inline"><?php _e('Fatture', 'fatture-rf'); ?></h1>
+    <h1 class="wp-heading-inline"><?php _e('Invoices', 'fatture-rf'); ?></h1>
     <a href="<?php echo admin_url('admin.php?page=fatture-rf-invoices&view=add'); ?>" class="page-title-action">
-        <?php _e('Aggiungi Nuova', 'fatture-rf'); ?>
+        <?php _e('Add New', 'fatture-rf'); ?>
     </a>
     <hr class="wp-header-end">
     
@@ -24,19 +24,19 @@ if (!defined('ABSPATH')) {
             <input type="hidden" name="page" value="fatture-rf-invoices">
             
             <select name="status" id="status">
-                <option value=""><?php _e('Tutti gli stati', 'fatture-rf'); ?></option>
-                <option value="draft" <?php selected($status, 'draft'); ?>><?php _e('Bozza', 'fatture-rf'); ?></option>
-                <option value="sent" <?php selected($status, 'sent'); ?>><?php _e('Inviata', 'fatture-rf'); ?></option>
-                <option value="paid" <?php selected($status, 'paid'); ?>><?php _e('Pagata', 'fatture-rf'); ?></option>
-                <option value="overdue" <?php selected($status, 'overdue'); ?>><?php _e('Scaduta', 'fatture-rf'); ?></option>
-                <option value="cancelled" <?php selected($status, 'cancelled'); ?>><?php _e('Annullata', 'fatture-rf'); ?></option>
-                <option value="submitted" <?php selected($status, 'submitted'); ?>><?php _e('Inviata SDI', 'fatture-rf'); ?></option>
-                <option value="accepted" <?php selected($status, 'accepted'); ?>><?php _e('Accettata SDI', 'fatture-rf'); ?></option>
-                <option value="rejected" <?php selected($status, 'rejected'); ?>><?php _e('Rifiutata SDI', 'fatture-rf'); ?></option>
+                <option value=""><?php _e('All statuses', 'fatture-rf'); ?></option>
+                <option value="draft" <?php selected($status, 'draft'); ?>><?php _e('Draft', 'fatture-rf'); ?></option>
+                <option value="sent" <?php selected($status, 'sent'); ?>><?php _e('Sent', 'fatture-rf'); ?></option>
+                <option value="paid" <?php selected($status, 'paid'); ?>><?php _e('Paid', 'fatture-rf'); ?></option>
+                <option value="overdue" <?php selected($status, 'overdue'); ?>><?php _e('Overdue', 'fatture-rf'); ?></option>
+                <option value="cancelled" <?php selected($status, 'cancelled'); ?>><?php _e('Cancelled', 'fatture-rf'); ?></option>
+                <option value="submitted" <?php selected($status, 'submitted'); ?>><?php _e('SDI Submitted', 'fatture-rf'); ?></option>
+                <option value="accepted" <?php selected($status, 'accepted'); ?>><?php _e('SDI Accepted', 'fatture-rf'); ?></option>
+                <option value="rejected" <?php selected($status, 'rejected'); ?>><?php _e('SDI Rejected', 'fatture-rf'); ?></option>
             </select>
             
             <select name="client_id" id="client_id">
-                <option value=""><?php _e('Tutti i clienti', 'fatture-rf'); ?></option>
+                <option value=""><?php _e('All Clients', 'fatture-rf'); ?></option>
                 <?php foreach ($clients as $client_option): ?>
                 <option value="<?php echo $client_option->id; ?>" <?php selected($client_id, $client_option->id); ?>>
                     <?php echo esc_html($client_option->business_name); ?>
@@ -44,11 +44,11 @@ if (!defined('ABSPATH')) {
                 <?php endforeach; ?>
             </select>
             
-            <button type="submit" class="button"><?php _e('Filtra', 'fatture-rf'); ?></button>
+            <button type="submit" class="button"><?php _e('Filter', 'fatture-rf'); ?></button>
             
             <?php if (!empty($status) || !empty($client_id)): ?>
             <a href="<?php echo admin_url('admin.php?page=fatture-rf-invoices'); ?>" class="button">
-                <?php _e('Resetta filtri', 'fatture-rf'); ?>
+                <?php _e('Reset Filters', 'fatture-rf'); ?>
             </a>
             <?php endif; ?>
         </form>
@@ -59,13 +59,13 @@ if (!defined('ABSPATH')) {
     <table class="frf-table">
         <thead>
             <tr>
-                <th><?php _e('Numero', 'fatture-rf'); ?></th>
-                <th><?php _e('Data', 'fatture-rf'); ?></th>
-                <th><?php _e('Cliente', 'fatture-rf'); ?></th>
-                <th><?php _e('Importo', 'fatture-rf'); ?></th>
+                <th><?php _e('Number', 'fatture-rf'); ?></th>
+                <th><?php _e('Date', 'fatture-rf'); ?></th>
+                <th><?php _e('Client', 'fatture-rf'); ?></th>
+                <th><?php _e('Amount', 'fatture-rf'); ?></th>
                 <th><?php _e('Da Pagare', 'fatture-rf'); ?></th>
-                <th><?php _e('Stato', 'fatture-rf'); ?></th>
-                <th><?php _e('Azioni', 'fatture-rf'); ?></th>
+                <th><?php _e('Status', 'fatture-rf'); ?></th>
+                <th><?php _e('Actions', 'fatture-rf'); ?></th>
             </tr>
         </thead>
         <tbody>
@@ -100,18 +100,18 @@ if (!defined('ABSPATH')) {
                 <td class="frf-actions">
                     <a href="<?php echo admin_url('admin.php?page=fatture-rf-invoices&view=view&id=' . $invoice->id); ?>" 
                        class="frf-action-link">
-                        <?php _e('Visualizza', 'fatture-rf'); ?>
+                        <?php _e('View', 'fatture-rf'); ?>
                     </a>
                     <?php if ($invoice->status === 'draft'): ?>
                     <a href="<?php echo admin_url('admin.php?page=fatture-rf-invoices&view=edit&id=' . $invoice->id); ?>" 
                        class="frf-action-link">
-                        <?php _e('Modifica', 'fatture-rf'); ?>
+                        <?php _e('Edit', 'fatture-rf'); ?>
                     </a>
                     <?php endif; ?>
                     <?php if (in_array($invoice->status, ['draft', 'cancelled'])): ?>
                     <a href="<?php echo wp_nonce_url(admin_url('admin.php?page=fatture-rf-invoices&action=delete_invoice&id=' . $invoice->id), 'frf_action'); ?>" 
                        class="frf-action-link frf-delete-link" style="color: #d63638;">
-                        <?php _e('Elimina', 'fatture-rf'); ?>
+                        <?php _e('Delete', 'fatture-rf'); ?>
                     </a>
                     <?php endif; ?>
                 </td>
@@ -171,7 +171,7 @@ if (!defined('ABSPATH')) {
             <?php _e('Nessuna fattura trovata.', 'fatture-rf'); ?>
             <br><br>
             <a href="<?php echo admin_url('admin.php?page=fatture-rf-invoices&view=add'); ?>" class="button button-primary">
-                <?php _e('Crea la prima fattura', 'fatture-rf'); ?>
+                <?php _e('Create first invoice', 'fatture-rf'); ?>
             </a>
         </p>
     </div>

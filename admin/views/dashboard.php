@@ -21,11 +21,11 @@ $business_info = $settings->get_business_info();
     <div style="margin: 20px 0;">
         <a href="<?php echo admin_url('admin.php?page=fatture-rf-invoices&view=add'); ?>" class="button button-primary button-large">
             <span class="dashicons dashicons-plus-alt" style="margin-top: 3px;"></span>
-            <?php _e('Nuova Fattura', 'fatture-rf'); ?>
+            <?php _e('New Invoice', 'fatture-rf'); ?>
         </a>
         <a href="<?php echo admin_url('admin.php?page=fatture-rf-clients&view=add'); ?>" class="button button-secondary button-large">
             <span class="dashicons dashicons-businessman" style="margin-top: 3px;"></span>
-            <?php _e('Nuovo Cliente', 'fatture-rf'); ?>
+            <?php _e('New Client', 'fatture-rf'); ?>
         </a>
     </div>
     
@@ -33,24 +33,24 @@ $business_info = $settings->get_business_info();
     <div class="frf-dashboard-stats">
         <!-- Total Invoices -->
         <div class="frf-stat-card">
-            <h3><?php _e('Totale Fatture', 'fatture-rf'); ?></h3>
+            <h3><?php _e('Total Invoices', 'fatture-rf'); ?></h3>
             <p class="frf-stat-value"><?php echo number_format($stats->total_invoices, 0, ',', '.'); ?></p>
             <p class="frf-stat-label">
-                <?php echo number_format($stats->paid_invoices, 0, ',', '.'); ?> <?php _e('pagate', 'fatture-rf'); ?> | 
-                <?php echo number_format($stats->sent_invoices, 0, ',', '.'); ?> <?php _e('inviate', 'fatture-rf'); ?>
+                <?php echo number_format($stats->paid_invoices, 0, ',', '.'); ?> <?php _e('paid', 'fatture-rf'); ?> | 
+                <?php echo number_format($stats->sent_invoices, 0, ',', '.'); ?> <?php _e('sent', 'fatture-rf'); ?>
             </p>
         </div>
         
         <!-- Total Amount -->
         <div class="frf-stat-card">
-            <h3><?php _e('Fatturato Totale', 'fatture-rf'); ?></h3>
+            <h3><?php _e('Total Revenue', 'fatture-rf'); ?></h3>
             <p class="frf-stat-value">€ <?php echo number_format($stats->total_amount, 2, ',', '.'); ?></p>
-            <p class="frf-stat-label"><?php _e('Importo totale emesso', 'fatture-rf'); ?></p>
+            <p class="frf-stat-label"><?php _e('Total amount issued', 'fatture-rf'); ?></p>
         </div>
         
         <!-- Paid Amount -->
         <div class="frf-stat-card">
-            <h3><?php _e('Incassato', 'fatture-rf'); ?></h3>
+            <h3><?php _e('Received', 'fatture-rf'); ?></h3>
             <p class="frf-stat-value" style="color: #0a7d3e;">
                 € <?php echo number_format($stats->paid_amount, 2, ',', '.'); ?>
             </p>
@@ -58,37 +58,37 @@ $business_info = $settings->get_business_info();
                 <?php 
                 $percentage = $stats->total_amount > 0 ? ($stats->paid_amount / $stats->total_amount) * 100 : 0;
                 echo number_format($percentage, 0) . '%'; 
-                ?> <?php _e('del totale', 'fatture-rf'); ?>
+                ?> <?php _e('of total', 'fatture-rf'); ?>
             </p>
         </div>
         
         <!-- Outstanding Amount -->
         <div class="frf-stat-card">
-            <h3><?php _e('Da Incassare', 'fatture-rf'); ?></h3>
+            <h3><?php _e('Outstanding', 'fatture-rf'); ?></h3>
             <p class="frf-stat-value" style="color: #d63638;">
                 € <?php echo number_format($stats->outstanding_amount, 2, ',', '.'); ?>
             </p>
-            <p class="frf-stat-label"><?php _e('Fatture non saldate', 'fatture-rf'); ?></p>
+            <p class="frf-stat-label"><?php _e('Unpaid invoices', 'fatture-rf'); ?></p>
         </div>
         
         <!-- Total Clients -->
         <div class="frf-stat-card">
-            <h3><?php _e('Clienti', 'fatture-rf'); ?></h3>
+            <h3><?php _e('Clients', 'fatture-rf'); ?></h3>
             <p class="frf-stat-value"><?php echo number_format($total_clients, 0, ',', '.'); ?></p>
             <p class="frf-stat-label">
                 <a href="<?php echo admin_url('admin.php?page=fatture-rf-clients'); ?>">
-                    <?php _e('Visualizza tutti', 'fatture-rf'); ?>
+                    <?php _e('View all', 'fatture-rf'); ?>
                 </a>
             </p>
         </div>
         
         <!-- Draft Invoices -->
         <div class="frf-stat-card">
-            <h3><?php _e('Bozze', 'fatture-rf'); ?></h3>
+            <h3><?php _e('Draft', 'fatture-rf'); ?></h3>
             <p class="frf-stat-value"><?php echo number_format($stats->draft_invoices, 0, ',', '.'); ?></p>
             <p class="frf-stat-label">
                 <a href="<?php echo admin_url('admin.php?page=fatture-rf-invoices&status=draft'); ?>">
-                    <?php _e('Visualizza bozze', 'fatture-rf'); ?>
+                    <?php _e('View drafts', 'fatture-rf'); ?>
                 </a>
             </p>
         </div>
@@ -111,10 +111,10 @@ $business_info = $settings->get_business_info();
     <div class="frf-card" style="margin-top: 30px;">
         <div class="frf-card-header">
             <h2 class="frf-card-title">
-                <?php _e('Fatture Recenti', 'fatture-rf'); ?>
+                <?php _e('Recent Invoices', 'fatture-rf'); ?>
                 <a href="<?php echo admin_url('admin.php?page=fatture-rf-invoices'); ?>" 
                    class="button button-small" style="float: right;">
-                    <?php _e('Visualizza tutte', 'fatture-rf'); ?>
+                    <?php _e('View All', 'fatture-rf'); ?>
                 </a>
             </h2>
         </div>
@@ -123,12 +123,12 @@ $business_info = $settings->get_business_info();
         <table class="frf-table">
             <thead>
                 <tr>
-                    <th><?php _e('Numero', 'fatture-rf'); ?></th>
-                    <th><?php _e('Data', 'fatture-rf'); ?></th>
-                    <th><?php _e('Cliente', 'fatture-rf'); ?></th>
-                    <th><?php _e('Importo', 'fatture-rf'); ?></th>
-                    <th><?php _e('Stato', 'fatture-rf'); ?></th>
-                    <th><?php _e('Azioni', 'fatture-rf'); ?></th>
+                    <th><?php _e('Number', 'fatture-rf'); ?></th>
+                    <th><?php _e('Date', 'fatture-rf'); ?></th>
+                    <th><?php _e('Client', 'fatture-rf'); ?></th>
+                    <th><?php _e('Amount', 'fatture-rf'); ?></th>
+                    <th><?php _e('Status', 'fatture-rf'); ?></th>
+                    <th><?php _e('Actions', 'fatture-rf'); ?></th>
                 </tr>
             </thead>
             <tbody>
@@ -152,11 +152,11 @@ $business_info = $settings->get_business_info();
                     <td class="frf-actions">
                         <a href="<?php echo admin_url('admin.php?page=fatture-rf-invoices&view=view&id=' . $invoice->id); ?>" 
                            class="frf-action-link">
-                            <?php _e('Visualizza', 'fatture-rf'); ?>
+                            <?php _e('View', 'fatture-rf'); ?>
                         </a>
                         <a href="<?php echo admin_url('admin.php?page=fatture-rf-invoices&view=edit&id=' . $invoice->id); ?>" 
                            class="frf-action-link">
-                            <?php _e('Modifica', 'fatture-rf'); ?>
+                            <?php _e('Edit', 'fatture-rf'); ?>
                         </a>
                     </td>
                 </tr>
@@ -165,9 +165,9 @@ $business_info = $settings->get_business_info();
         </table>
         <?php else: ?>
         <p style="padding: 20px; text-align: center; color: #666;">
-            <?php _e('Nessuna fattura trovata.', 'fatture-rf'); ?>
+            <?php _e('No invoices found.', 'fatture-rf'); ?>
             <a href="<?php echo admin_url('admin.php?page=fatture-rf-invoices&view=add'); ?>">
-                <?php _e('Crea la tua prima fattura', 'fatture-rf'); ?>
+                <?php _e('Create your first invoice', 'fatture-rf'); ?>
             </a>
         </p>
         <?php endif; ?>
@@ -176,7 +176,7 @@ $business_info = $settings->get_business_info();
     <!-- Quick Stats by Month -->
     <div class="frf-card" style="margin-top: 20px;">
         <div class="frf-card-header">
-            <h2 class="frf-card-title"><?php _e('Riepilogo Mensile', 'fatture-rf'); ?></h2>
+            <h2 class="frf-card-title"><?php _e('Monthly Summary', 'fatture-rf'); ?></h2>
         </div>
         
         <?php
@@ -199,10 +199,10 @@ $business_info = $settings->get_business_info();
         <table class="frf-table">
             <thead>
                 <tr>
-                    <th><?php _e('Mese', 'fatture-rf'); ?></th>
-                    <th><?php _e('N. Fatture', 'fatture-rf'); ?></th>
-                    <th><?php _e('Totale Emesso', 'fatture-rf'); ?></th>
-                    <th><?php _e('Incassato', 'fatture-rf'); ?></th>
+                    <th><?php _e('Month', 'fatture-rf'); ?></th>
+                    <th><?php _e('#Invoices', 'fatture-rf'); ?></th>
+                    <th><?php _e('Total Issued', 'fatture-rf'); ?></th>
+                    <th><?php _e('Received', 'fatture-rf'); ?></th>
                 </tr>
             </thead>
             <tbody>
@@ -230,12 +230,12 @@ $business_info = $settings->get_business_info();
     
     <!-- Info Box -->
     <div class="frf-card" style="margin-top: 20px; background: #f0f6fc; border-color: #2271b1;">
-        <h3 style="margin-top: 0;">💡 <?php _e('Suggerimenti', 'fatture-rf'); ?></h3>
+        <h3 style="margin-top: 0;">💡 <?php _e('Tips', 'fatture-rf'); ?></h3>
         <ul style="margin: 10px 0;">
-            <li><?php _e('Configura i tuoi dati aziendali nelle impostazioni per fatture complete', 'fatture-rf'); ?></li>
-            <li><?php _e('Verifica che tutti i clienti abbiano i dati corretti per la fatturazione elettronica', 'fatture-rf'); ?></li>
+            <li><?php _e('Configure your business data in settings for complete invoices', 'fatture-rf'); ?></li>
+            <li><?php _e('Verify that all clients have correct data for electronic invoicing', 'fatture-rf'); ?></li>
             <li><?php _e('Le fatture in regime forfettario sono esenti IVA (art. 1, c. 58, Legge n. 190/2014)', 'fatture-rf'); ?></li>
-            <li><?php _e('La funzione di invio XML a SDI sarà disponibile nella prossima versione', 'fatture-rf'); ?></li>
+            <li><?php _e('XML submission to SDI will be available in the next version', 'fatture-rf'); ?></li>
         </ul>
     </div>
 </div>

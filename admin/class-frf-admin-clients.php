@@ -78,7 +78,7 @@ class FRF_Admin_Clients {
      */
     private static function render_edit_client() {
         if (!isset($_GET['id'])) {
-            wp_die(__('ID cliente non valido', 'fatture-rf'));
+            wp_die(__('Invalid client ID', 'fatture-rf'));
         }
         
         $client_id = intval($_GET['id']);
@@ -86,7 +86,7 @@ class FRF_Admin_Clients {
         $client = $client_model->get($client_id);
         
         if (!$client) {
-            wp_die(__('Cliente non trovato', 'fatture-rf'));
+            wp_die(__('Client not found', 'fatture-rf'));
         }
         
         // Handle form submission
@@ -111,7 +111,7 @@ class FRF_Admin_Clients {
      */
     private static function render_view_client() {
         if (!isset($_GET['id'])) {
-            wp_die(__('ID cliente non valido', 'fatture-rf'));
+            wp_die(__('Invalid client ID', 'fatture-rf'));
         }
         
         $client_id = intval($_GET['id']);
@@ -119,7 +119,7 @@ class FRF_Admin_Clients {
         $client = $client_model->get($client_id);
         
         if (!$client) {
-            wp_die(__('Cliente non trovato', 'fatture-rf'));
+            wp_die(__('Client not found', 'fatture-rf'));
         }
         
         // Get client invoices
@@ -166,8 +166,8 @@ class FRF_Admin_Clients {
     public static function get_client_type_badge($type) {
         $types = array(
             'IT' => array('label' => __('Italia', 'fatture-rf'), 'class' => 'success'),
-            'EU' => array('label' => __('UE', 'fatture-rf'), 'class' => 'info'),
-            'NON_EU' => array('label' => __('Extra-UE', 'fatture-rf'), 'class' => 'warning')
+            'EU' => array('label' => __('EU', 'fatture-rf'), 'class' => 'info'),
+            'NON_EU' => array('label' => __('Extra-EU', 'fatture-rf'), 'class' => 'warning')
         );
         
         $type_info = isset($types[$type]) ? $types[$type] : array('label' => $type, 'class' => 'default');

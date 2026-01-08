@@ -58,8 +58,8 @@ class FRF_Admin {
         // Invoices
         add_submenu_page(
             'fatture-rf',
-            __('Fatture', 'fatture-rf'),
-            __('Fatture', 'fatture-rf'),
+            __('Invoices', 'fatture-rf'),
+            __('Invoices', 'fatture-rf'),
             'manage_options',
             'fatture-rf-invoices',
             array('FRF_Admin_Invoices', 'render')
@@ -68,8 +68,8 @@ class FRF_Admin {
         // Clients
         add_submenu_page(
             'fatture-rf',
-            __('Clienti', 'fatture-rf'),
-            __('Clienti', 'fatture-rf'),
+            __('Clients', 'fatture-rf'),
+            __('Clients', 'fatture-rf'),
             'manage_options',
             'fatture-rf-clients',
             array('FRF_Admin_Clients', 'render')
@@ -78,8 +78,8 @@ class FRF_Admin {
         // Settings
         add_submenu_page(
             'fatture-rf',
-            __('Impostazioni', 'fatture-rf'),
-            __('Impostazioni', 'fatture-rf'),
+            __('Settings', 'fatture-rf'),
+            __('Settings', 'fatture-rf'),
             'manage_options',
             'fatture-rf-settings',
             array('FRF_Admin_Settings', 'render')
@@ -116,7 +116,7 @@ class FRF_Admin {
         wp_localize_script('frf-admin-script', 'frfAdmin', array(
             'ajaxUrl' => admin_url('admin-ajax.php'),
             'nonce' => wp_create_nonce('frf_admin_nonce'),
-            'confirmDelete' => __('Sei sicuro di voler eliminare questo elemento?', 'fatture-rf')
+            'confirmDelete' => __('Are you sure you want to delete this item?', 'fatture-rf')
         ));
     }
     
@@ -133,7 +133,7 @@ class FRF_Admin {
         }
         
         if (!wp_verify_nonce($_GET['_wpnonce'], 'frf_action')) {
-            wp_die(__('Azione non autorizzata', 'fatture-rf'));
+            wp_die(__('Unauthorized action', 'fatture-rf'));
         }
         
         $action = sanitize_text_field($_GET['action']);
@@ -161,7 +161,7 @@ class FRF_Admin {
         $invoice = new FRF_Invoice();
         
         if ($invoice->delete($invoice_id)) {
-            $this->add_admin_notice('success', __('Fattura eliminata con successo', 'fatture-rf'));
+            $this->add_admin_notice('success', __('Invoice deleted successfully', 'fatture-rf'));
         } else {
             $this->add_admin_notice('error', __('Errore durante l\'eliminazione della fattura', 'fatture-rf'));
         }
@@ -186,7 +186,7 @@ class FRF_Admin {
         if (is_wp_error($result)) {
             $this->add_admin_notice('error', $result->get_error_message());
         } else {
-            $this->add_admin_notice('success', __('Cliente eliminato con successo', 'fatture-rf'));
+            $this->add_admin_notice('success', __('Client deleted successfully', 'fatture-rf'));
         }
         
         wp_redirect(admin_url('admin.php?page=fatture-rf-clients'));
@@ -239,11 +239,11 @@ class FRF_Admin {
         check_ajax_referer('frf_admin_nonce', 'nonce');
         
         if (!current_user_can('manage_options')) {
-            wp_die(__('Accesso non autorizzato', 'fatture-rf'));
+            wp_die(__('Unauthorized access', 'fatture-rf'));
         }
         
         if (!isset($_GET['invoice_id'])) {
-            wp_die(__('ID fattura non valido', 'fatture-rf'));
+            wp_die(__('Invalid invoice ID', 'fatture-rf'));
         }
         
         $invoice_id = intval($_GET['invoice_id']);
@@ -268,7 +268,7 @@ class FRF_Admin {
         check_ajax_referer('frf_admin_nonce', 'nonce');
         
         if (!current_user_can('manage_options')) {
-            wp_send_json_error(array('message' => __('Accesso non autorizzato', 'fatture-rf')));
+            wp_send_json_error(array('message' => __('Unauthorized access', 'fatture-rf')));
         }
         
         $invoice_id = intval($_POST['invoice_id']);
@@ -291,7 +291,7 @@ class FRF_Admin {
         check_ajax_referer('frf_admin_nonce', 'nonce');
         
         if (!current_user_can('manage_options')) {
-            wp_send_json_error(array('message' => __('Accesso non autorizzato', 'fatture-rf')));
+            wp_send_json_error(array('message' => __('Unauthorized access', 'fatture-rf')));
         }
         
         $search = sanitize_text_field($_POST['search']);

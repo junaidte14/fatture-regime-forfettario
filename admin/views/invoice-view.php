@@ -11,7 +11,7 @@ if (!defined('ABSPATH')) {
 
 <div class="wrap">
     <h1>
-        <?php _e('Fattura', 'fatture-rf'); ?> <?php echo esc_html($invoice->invoice_number); ?>
+        <?php _e('Invoice', 'fatture-rf'); ?> <?php echo esc_html($invoice->invoice_number); ?>
         <?php echo FRF_Admin_Invoices::get_status_badge($invoice->status); ?>
     </h1>
     
@@ -19,24 +19,24 @@ if (!defined('ABSPATH')) {
         <?php if ($invoice->status === 'draft'): ?>
         <a href="<?php echo admin_url('admin.php?page=fatture-rf-invoices&view=edit&id=' . $invoice->id); ?>" 
            class="button button-primary">
-            <?php _e('Modifica Fattura', 'fatture-rf'); ?>
+            <?php _e('Edit Invoice', 'fatture-rf'); ?>
         </a>
         <?php endif; ?>
         
         <button class="button frf-export-pdf" data-invoice-id="<?php echo $invoice->id; ?>">
             <span class="dashicons dashicons-pdf" style="margin-top: 3px;"></span>
-            <?php _e('Scarica PDF', 'fatture-rf'); ?>
+            <?php _e('Download PDF', 'fatture-rf'); ?>
         </button>
         
         <?php if ($invoice->status !== 'cancelled'): ?>
         <button class="button">
             <span class="dashicons dashicons-email" style="margin-top: 3px;"></span>
-            <?php _e('Invia Email', 'fatture-rf'); ?>
+            <?php _e('Send Email', 'fatture-rf'); ?>
         </button>
         <?php endif; ?>
         
         <a href="<?php echo admin_url('admin.php?page=fatture-rf-invoices'); ?>" class="button">
-            <?php _e('← Torna alle Fatture', 'fatture-rf'); ?>
+            <?php _e('← Back to Invoices', 'fatture-rf'); ?>
         </a>
     </p>
     

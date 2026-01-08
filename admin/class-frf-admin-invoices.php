@@ -92,7 +92,7 @@ class FRF_Admin_Invoices {
      */
     private static function render_edit_invoice() {
         if (!isset($_GET['id'])) {
-            wp_die(__('ID fattura non valido', 'fatture-rf'));
+            wp_die(__('Invalid invoice ID', 'fatture-rf'));
         }
         
         $invoice_id = intval($_GET['id']);
@@ -100,7 +100,7 @@ class FRF_Admin_Invoices {
         $invoice = $invoice_model->get($invoice_id);
         
         if (!$invoice) {
-            wp_die(__('Fattura non trovata', 'fatture-rf'));
+            wp_die(__('Invoice not found', 'fatture-rf'));
         }
         
         // Handle form submission
@@ -131,7 +131,7 @@ class FRF_Admin_Invoices {
      */
     private static function render_view_invoice() {
         if (!isset($_GET['id'])) {
-            wp_die(__('ID fattura non valido', 'fatture-rf'));
+            wp_die(__('Invalid invoice ID', 'fatture-rf'));
         }
         
         $invoice_id = intval($_GET['id']);
@@ -139,7 +139,7 @@ class FRF_Admin_Invoices {
         $invoice = $invoice_model->get($invoice_id);
         
         if (!$invoice) {
-            wp_die(__('Fattura non trovata', 'fatture-rf'));
+            wp_die(__('Invoice not found', 'fatture-rf'));
         }
         
         // Get client
@@ -207,14 +207,14 @@ class FRF_Admin_Invoices {
      */
     public static function get_status_badge($status) {
         $statuses = array(
-            'draft' => array('label' => __('Bozza', 'fatture-rf'), 'class' => 'secondary'),
-            'sent' => array('label' => __('Inviata', 'fatture-rf'), 'class' => 'info'),
-            'paid' => array('label' => __('Pagata', 'fatture-rf'), 'class' => 'success'),
-            'overdue' => array('label' => __('Scaduta', 'fatture-rf'), 'class' => 'warning'),
-            'cancelled' => array('label' => __('Annullata', 'fatture-rf'), 'class' => 'error'),
-            'submitted' => array('label' => __('Inviata SDI', 'fatture-rf'), 'class' => 'info'),
-            'accepted' => array('label' => __('Accettata SDI', 'fatture-rf'), 'class' => 'success'),
-            'rejected' => array('label' => __('Rifiutata SDI', 'fatture-rf'), 'class' => 'error')
+            'draft' => array('label' => __('Draft', 'fatture-rf'), 'class' => 'secondary'),
+            'sent' => array('label' => __('Sent', 'fatture-rf'), 'class' => 'info'),
+            'paid' => array('label' => __('Paid', 'fatture-rf'), 'class' => 'success'),
+            'overdue' => array('label' => __('Overdue', 'fatture-rf'), 'class' => 'warning'),
+            'cancelled' => array('label' => __('Cancelled', 'fatture-rf'), 'class' => 'error'),
+            'submitted' => array('label' => __('SDI Submitted', 'fatture-rf'), 'class' => 'info'),
+            'accepted' => array('label' => __('SDI Accepted', 'fatture-rf'), 'class' => 'success'),
+            'rejected' => array('label' => __('SDI Rejected', 'fatture-rf'), 'class' => 'error')
         );
         
         $status_info = isset($statuses[$status]) ? $statuses[$status] : array('label' => $status, 'class' => 'default');

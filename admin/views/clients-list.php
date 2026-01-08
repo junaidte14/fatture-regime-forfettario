@@ -10,9 +10,9 @@ if (!defined('ABSPATH')) {
 ?>
 
 <div class="wrap">
-    <h1 class="wp-heading-inline"><?php _e('Clienti', 'fatture-rf'); ?></h1>
+    <h1 class="wp-heading-inline"><?php _e('Clients', 'fatture-rf'); ?></h1>
     <a href="<?php echo admin_url('admin.php?page=fatture-rf-clients&view=add'); ?>" class="page-title-action">
-        <?php _e('Aggiungi Nuovo', 'fatture-rf'); ?>
+        <?php _e('Add New', 'fatture-rf'); ?>
     </a>
     <hr class="wp-header-end">
     
@@ -24,20 +24,20 @@ if (!defined('ABSPATH')) {
             <input type="hidden" name="page" value="fatture-rf-clients">
             
             <select name="client_type" id="client_type">
-                <option value=""><?php _e('Tutti i tipi', 'fatture-rf'); ?></option>
+                <option value=""><?php _e('All Types', 'fatture-rf'); ?></option>
                 <option value="IT" <?php selected($client_type, 'IT'); ?>><?php _e('Italia', 'fatture-rf'); ?></option>
-                <option value="EU" <?php selected($client_type, 'EU'); ?>><?php _e('UE', 'fatture-rf'); ?></option>
-                <option value="NON_EU" <?php selected($client_type, 'NON_EU'); ?>><?php _e('Extra-UE', 'fatture-rf'); ?></option>
+                <option value="EU" <?php selected($client_type, 'EU'); ?>><?php _e('EU', 'fatture-rf'); ?></option>
+                <option value="NON_EU" <?php selected($client_type, 'NON_EU'); ?>><?php _e('Extra-EU', 'fatture-rf'); ?></option>
             </select>
             
             <input type="search" name="s" value="<?php echo esc_attr($search); ?>" 
-                   placeholder="<?php _e('Cerca cliente...', 'fatture-rf'); ?>">
+                   placeholder="<?php _e('Search client...', 'fatture-rf'); ?>">
             
-            <button type="submit" class="button"><?php _e('Filtra', 'fatture-rf'); ?></button>
+            <button type="submit" class="button"><?php _e('Filter', 'fatture-rf'); ?></button>
             
             <?php if (!empty($client_type) || !empty($search)): ?>
             <a href="<?php echo admin_url('admin.php?page=fatture-rf-clients'); ?>" class="button">
-                <?php _e('Resetta filtri', 'fatture-rf'); ?>
+                <?php _e('Reset filter', 'fatture-rf'); ?>
             </a>
             <?php endif; ?>
         </form>
@@ -48,13 +48,13 @@ if (!defined('ABSPATH')) {
     <table class="frf-table">
         <thead>
             <tr>
-                <th><?php _e('Ragione Sociale', 'fatture-rf'); ?></th>
+                <th><?php _e('Business Name', 'fatture-rf'); ?></th>
                 <th><?php _e('P.IVA / CF', 'fatture-rf'); ?></th>
-                <th><?php _e('Tipo', 'fatture-rf'); ?></th>
-                <th><?php _e('Città', 'fatture-rf'); ?></th>
+                <th><?php _e('Type', 'fatture-rf'); ?></th>
+                <th><?php _e('City', 'fatture-rf'); ?></th>
                 <th><?php _e('Email', 'fatture-rf'); ?></th>
                 <th><?php _e('Fatture', 'fatture-rf'); ?></th>
-                <th><?php _e('Azioni', 'fatture-rf'); ?></th>
+                <th><?php _e('Actions', 'fatture-rf'); ?></th>
             </tr>
         </thead>
         <tbody>
@@ -93,16 +93,16 @@ if (!defined('ABSPATH')) {
                 <td class="frf-actions">
                     <a href="<?php echo admin_url('admin.php?page=fatture-rf-clients&view=view&id=' . $client->id); ?>" 
                        class="frf-action-link">
-                        <?php _e('Visualizza', 'fatture-rf'); ?>
+                        <?php _e('View', 'fatture-rf'); ?>
                     </a>
                     <a href="<?php echo admin_url('admin.php?page=fatture-rf-clients&view=edit&id=' . $client->id); ?>" 
                        class="frf-action-link">
-                        <?php _e('Modifica', 'fatture-rf'); ?>
+                        <?php _e('Edit', 'fatture-rf'); ?>
                     </a>
                     <?php if ($stats->total_invoices == 0): ?>
                     <a href="<?php echo wp_nonce_url(admin_url('admin.php?page=fatture-rf-clients&action=delete_client&id=' . $client->id), 'frf_action'); ?>" 
                        class="frf-action-link frf-delete-link" style="color: #d63638;">
-                        <?php _e('Elimina', 'fatture-rf'); ?>
+                        <?php _e('Delete', 'fatture-rf'); ?>
                     </a>
                     <?php endif; ?>
                 </td>
@@ -113,10 +113,10 @@ if (!defined('ABSPATH')) {
     <?php else: ?>
     <div class="frf-card">
         <p style="text-align: center; padding: 40px; color: #666;">
-            <?php _e('Nessun cliente trovato.', 'fatture-rf'); ?>
+            <?php _e('No clients found.', 'fatture-rf'); ?>
             <br><br>
             <a href="<?php echo admin_url('admin.php?page=fatture-rf-clients&view=add'); ?>" class="button button-primary">
-                <?php _e('Aggiungi il primo cliente', 'fatture-rf'); ?>
+                <?php _e('Add first client', 'fatture-rf'); ?>
             </a>
         </p>
     </div>

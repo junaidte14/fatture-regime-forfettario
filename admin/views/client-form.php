@@ -9,7 +9,7 @@ if (!defined('ABSPATH')) {
 }
 
 $is_edit = isset($client) && !empty($client);
-$page_title = $is_edit ? __('Modifica Cliente', 'fatture-rf') : __('Nuovo Cliente', 'fatture-rf');
+$page_title = $is_edit ? __('Edit Client', 'fatture-rf') : __('New Client', 'fatture-rf');
 ?>
 
 <div class="wrap">
@@ -26,20 +26,20 @@ $page_title = $is_edit ? __('Modifica Cliente', 'fatture-rf') : __('Nuovo Client
         
         <div class="frf-card">
             <div class="frf-card-header">
-                <h2 class="frf-card-title"><?php _e('Informazioni Anagrafiche', 'fatture-rf'); ?></h2>
+                <h2 class="frf-card-title"><?php _e('Personal Information', 'fatture-rf'); ?></h2>
             </div>
             
             <div class="frf-form-row">
                 <div class="frf-form-group">
                     <label for="business_name">
-                        <?php _e('Ragione Sociale', 'fatture-rf'); ?> <span style="color: red;">*</span>
+                        <?php _e('Business Name', 'fatture-rf'); ?> <span style="color: red;">*</span>
                     </label>
                     <input type="text" id="business_name" name="business_name" 
                            value="<?php echo esc_attr($client->business_name ?? ''); ?>" required>
                 </div>
                 
                 <div class="frf-form-group">
-                    <label for="country"><?php _e('Paese', 'fatture-rf'); ?></label>
+                    <label for="country"><?php _e('Country', 'fatture-rf'); ?></label>
                     <select id="country" name="country">
                         <option value="IT" <?php selected($client->country ?? 'IT', 'IT'); ?>>Italia</option>
                         <option value="AT" <?php selected($client->country ?? '', 'AT'); ?>>Austria</option>
@@ -94,29 +94,29 @@ $page_title = $is_edit ? __('Modifica Cliente', 'fatture-rf') : __('Nuovo Client
         
         <div class="frf-card">
             <div class="frf-card-header">
-                <h2 class="frf-card-title"><?php _e('Indirizzo', 'fatture-rf'); ?></h2>
+                <h2 class="frf-card-title"><?php _e('Address', 'fatture-rf'); ?></h2>
             </div>
             
             <div class="frf-form-group">
-                <label for="address"><?php _e('Via/Piazza', 'fatture-rf'); ?></label>
+                <label for="address"><?php _e('Street/Square', 'fatture-rf'); ?></label>
                 <textarea id="address" name="address" rows="2"><?php echo esc_textarea($client->address ?? ''); ?></textarea>
             </div>
             
             <div class="frf-form-row">
                 <div class="frf-form-group">
-                    <label for="city"><?php _e('Città', 'fatture-rf'); ?></label>
+                    <label for="city"><?php _e('City', 'fatture-rf'); ?></label>
                     <input type="text" id="city" name="city" 
                            value="<?php echo esc_attr($client->city ?? ''); ?>">
                 </div>
                 
                 <div class="frf-form-group">
-                    <label for="province"><?php _e('Provincia', 'fatture-rf'); ?></label>
+                    <label for="province"><?php _e('Province', 'fatture-rf'); ?></label>
                     <input type="text" id="province" name="province" 
                            value="<?php echo esc_attr($client->province ?? ''); ?>" maxlength="2">
                 </div>
                 
                 <div class="frf-form-group">
-                    <label for="postal_code"><?php _e('CAP', 'fatture-rf'); ?></label>
+                    <label for="postal_code"><?php _e('Postal Code (CAP)', 'fatture-rf'); ?></label>
                     <input type="text" id="postal_code" name="postal_code" 
                            value="<?php echo esc_attr($client->postal_code ?? ''); ?>">
                 </div>
@@ -125,7 +125,7 @@ $page_title = $is_edit ? __('Modifica Cliente', 'fatture-rf') : __('Nuovo Client
         
         <div class="frf-card">
             <div class="frf-card-header">
-                <h2 class="frf-card-title"><?php _e('Contatti', 'fatture-rf'); ?></h2>
+                <h2 class="frf-card-title"><?php _e('Contacts', 'fatture-rf'); ?></h2>
             </div>
             
             <div class="frf-form-row">
@@ -145,39 +145,39 @@ $page_title = $is_edit ? __('Modifica Cliente', 'fatture-rf') : __('Nuovo Client
         
         <div class="frf-card frf-field-pec">
             <div class="frf-card-header">
-                <h2 class="frf-card-title"><?php _e('Fatturazione Elettronica', 'fatture-rf'); ?></h2>
+                <h2 class="frf-card-title"><?php _e('Electronic Invoicing', 'fatture-rf'); ?></h2>
             </div>
             
             <div class="frf-form-row">
                 <div class="frf-form-group frf-field-sdi">
-                    <label for="sdi_code"><?php _e('Codice Destinatario SDI', 'fatture-rf'); ?></label>
+                    <label for="sdi_code"><?php _e('SDI Recipient Code', 'fatture-rf'); ?></label>
                     <input type="text" id="sdi_code" name="sdi_code" 
                            value="<?php echo esc_attr($client->sdi_code ?? ''); ?>" maxlength="7">
-                    <small class="frf-form-help"><?php _e('7 caratteri (es: 0000000 per privati)', 'fatture-rf'); ?></small>
+                    <small class="frf-form-help"><?php _e('7 characters (e.g., 0000000 for individuals)', 'fatture-rf'); ?></small>
                 </div>
                 
                 <div class="frf-form-group frf-field-pec">
                     <label for="pec_email"><?php _e('PEC', 'fatture-rf'); ?></label>
                     <input type="email" id="pec_email" name="pec_email" 
                            value="<?php echo esc_attr($client->pec_email ?? ''); ?>">
-                    <small class="frf-form-help"><?php _e('Email PEC per fatturazione elettronica', 'fatture-rf'); ?></small>
+                    <small class="frf-form-help"><?php _e('PEC email for electronic invoicing', 'fatture-rf'); ?></small>
                 </div>
             </div>
             
             <div class="notice notice-info" style="margin-top: 15px;">
                 <p>
                     <strong><?php _e('Info:', 'fatture-rf'); ?></strong>
-                    <?php _e('Per clienti italiani è richiesto almeno uno tra Codice SDI o PEC per la fatturazione elettronica.', 'fatture-rf'); ?>
+                    <?php _e('Italian clients require at least SDI Code or PEC for electronic invoicing', 'fatture-rf'); ?>
                 </p>
             </div>
         </div>
         
         <p class="submit">
             <button type="submit" name="frf_save_client" class="button button-primary button-large">
-                <?php echo $is_edit ? __('Aggiorna Cliente', 'fatture-rf') : __('Salva Cliente', 'fatture-rf'); ?>
+                <?php echo $is_edit ? __('Update Client', 'fatture-rf') : __('Save Client', 'fatture-rf'); ?>
             </button>
             <a href="<?php echo admin_url('admin.php?page=fatture-rf-clients'); ?>" class="button button-large">
-                <?php _e('Annulla', 'fatture-rf'); ?>
+                <?php _e('Cancel', 'fatture-rf'); ?>
             </a>
         </p>
     </form>

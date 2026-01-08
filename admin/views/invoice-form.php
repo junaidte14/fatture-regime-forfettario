@@ -9,7 +9,7 @@ if (!defined('ABSPATH')) {
 }
 
 $is_edit = isset($invoice) && !empty($invoice);
-$page_title = $is_edit ? __('Modifica Fattura', 'fatture-rf') : __('Nuova Fattura', 'fatture-rf');
+$page_title = $is_edit ? __('Edit Invoice', 'fatture-rf') : __('New Invoice', 'fatture-rf');
 
 // Get settings for defaults
 $default_payment_terms = $settings->get('default_payment_terms', '30 giorni data fattura');
@@ -37,13 +37,13 @@ $exempt_vat = $settings->get('exempt_vat', true);
                 <!-- Invoice Details -->
                 <div class="frf-card">
                     <div class="frf-card-header">
-                        <h2 class="frf-card-title"><?php _e('Dettagli Fattura', 'fatture-rf'); ?></h2>
+                        <h2 class="frf-card-title"><?php _e('Invoice Details', 'fatture-rf'); ?></h2>
                     </div>
                     
                     <div class="frf-form-row">
                         <div class="frf-form-group">
                             <label for="invoice_number">
-                                <?php _e('Numero Fattura', 'fatture-rf'); ?> <span style="color: red;">*</span>
+                                <?php _e('Invoice Number', 'fatture-rf'); ?> <span style="color: red;">*</span>
                             </label>
                             <input type="text" id="invoice_number" name="invoice_number" 
                                    value="<?php echo esc_attr($invoice->invoice_number ?? $invoice_number); ?>" 
@@ -52,7 +52,7 @@ $exempt_vat = $settings->get('exempt_vat', true);
                         
                         <div class="frf-form-group">
                             <label for="invoice_date">
-                                <?php _e('Data Fattura', 'fatture-rf'); ?> <span style="color: red;">*</span>
+                                <?php _e('Invoice Date', 'fatture-rf'); ?> <span style="color: red;">*</span>
                             </label>
                             <input type="date" id="invoice_date" name="invoice_date" 
                                    value="<?php echo esc_attr($invoice->invoice_date ?? date('Y-m-d')); ?>" required>
@@ -61,10 +61,10 @@ $exempt_vat = $settings->get('exempt_vat', true);
                     
                     <div class="frf-form-group">
                         <label for="client_id">
-                            <?php _e('Cliente', 'fatture-rf'); ?> <span style="color: red;">*</span>
+                            <?php _e('Client', 'fatture-rf'); ?> <span style="color: red;">*</span>
                         </label>
                         <select id="client_id" name="client_id" required>
-                            <option value=""><?php _e('Seleziona cliente', 'fatture-rf'); ?></option>
+                            <option value=""><?php _e('Select client', 'fatture-rf'); ?></option>
                             <?php foreach ($clients as $client_option): ?>
                             <option value="<?php echo $client_option->id; ?>" 
                                     <?php selected($invoice->client_id ?? ($_GET['client_id'] ?? ''), $client_option->id); ?>>
@@ -80,9 +80,9 @@ $exempt_vat = $settings->get('exempt_vat', true);
                 <div class="frf-card" style="margin-top: 20px;">
                     <div class="frf-card-header">
                         <h2 class="frf-card-title">
-                            <?php _e('Voci di Fattura', 'fatture-rf'); ?>
+                            <?php _e('Invoice Items', 'fatture-rf'); ?>
                             <button type="button" class="button button-small frf-add-item" style="float: right;">
-                                <?php _e('+ Aggiungi Voce', 'fatture-rf'); ?>
+                                <?php _e('+ Add Item', 'fatture-rf'); ?>
                             </button>
                         </h2>
                     </div>
@@ -91,10 +91,10 @@ $exempt_vat = $settings->get('exempt_vat', true);
                         <table>
                             <thead>
                                 <tr>
-                                    <th style="width: 50%;"><?php _e('Descrizione', 'fatture-rf'); ?></th>
-                                    <th style="width: 15%;"><?php _e('Quantità', 'fatture-rf'); ?></th>
-                                    <th style="width: 15%;"><?php _e('Prezzo Unitario', 'fatture-rf'); ?></th>
-                                    <th style="width: 15%;"><?php _e('Totale', 'fatture-rf'); ?></th>
+                                    <th style="width: 50%;"><?php _e('Description', 'fatture-rf'); ?></th>
+                                    <th style="width: 15%;"><?php _e('Quantity', 'fatture-rf'); ?></th>
+                                    <th style="width: 15%;"><?php _e('Unit Price', 'fatture-rf'); ?></th>
+                                    <th style="width: 15%;"><?php _e('TOTAL', 'fatture-rf'); ?></th>
                                     <th style="width: 5%;"></th>
                                 </tr>
                             </thead>
@@ -125,7 +125,7 @@ $exempt_vat = $settings->get('exempt_vat', true);
                                     </td>
                                     <td>
                                         <span class="dashicons dashicons-trash item-remove frf-remove-item" 
-                                              style="cursor: pointer; color: #d63638;" title="<?php _e('Rimuovi', 'fatture-rf'); ?>"></span>
+                                              style="cursor: pointer; color: #d63638;" title="<?php _e('Remove', 'fatture-rf'); ?>"></span>
                                     </td>
                                 </tr>
                                 <?php endforeach; ?>
@@ -137,33 +137,39 @@ $exempt_vat = $settings->get('exempt_vat', true);
                 <!-- Payment Details -->
                 <div class="frf-card" style="margin-top: 20px;">
                     <div class="frf-card-header">
-                        <h2 class="frf-card-title"><?php _e('Condizioni di Pagamento', 'fatture-rf'); ?></h2>
+                        <h2 class="frf-card-title"><?php _e('Payment Terms', 'fatture-rf'); ?></h2>
                     </div>
                     
                     <div class="frf-form-row">
                         <div class="frf-form-group">
-                            <label for="payment_terms"><?php _e('Termini di Pagamento', 'fatture-rf'); ?></label>
+                            <label for="payment_terms"><?php _e('Payment Terms', 'fatture-rf'); ?></label>
                             <input type="text" id="payment_terms" name="payment_terms" 
                                    value="<?php echo esc_attr($invoice->payment_terms ?? $default_payment_terms); ?>">
                         </div>
                         
                         <div class="frf-form-group">
-                            <label for="payment_method"><?php _e('Metodo di Pagamento', 'fatture-rf'); ?></label>
+                            <label for="payment_method"><?php _e('Payment Method', 'fatture-rf'); ?></label>
                             <select id="payment_method" name="payment_method">
                                 <option value="Bonifico bancario" <?php selected($invoice->payment_method ?? $default_payment_method, 'Bonifico bancario'); ?>>
-                                    <?php _e('Bonifico bancario', 'fatture-rf'); ?>
+                                    <?php _e('Bank Transfer', 'fatture-rf'); ?>
                                 </option>
                                 <option value="Contanti" <?php selected($invoice->payment_method ?? '', 'Contanti'); ?>>
-                                    <?php _e('Contanti', 'fatture-rf'); ?>
+                                    <?php _e('Cash', 'fatture-rf'); ?>
                                 </option>
                                 <option value="Assegno" <?php selected($invoice->payment_method ?? '', 'Assegno'); ?>>
-                                    <?php _e('Assegno', 'fatture-rf'); ?>
+                                    <?php _e('Check', 'fatture-rf'); ?>
                                 </option>
                                 <option value="RID" <?php selected($invoice->payment_method ?? '', 'RID'); ?>>
-                                    <?php _e('RID', 'fatture-rf'); ?>
+                                    <?php _e('Direct Debit (RID)', 'fatture-rf'); ?>
                                 </option>
                                 <option value="PayPal" <?php selected($invoice->payment_method ?? '', 'PayPal'); ?>>
                                     <?php _e('PayPal', 'fatture-rf'); ?>
+                                </option>
+                                <option value="Stripe" <?php selected($invoice->payment_method ?? '', 'Stripe'); ?>>
+                                    <?php _e('Stripe', 'fatture-rf'); ?>
+                                </option>
+                                <option value="Payoneer" <?php selected($invoice->payment_method ?? '', 'Payoneer'); ?>>
+                                    <?php _e('Payoneer', 'fatture-rf'); ?>
                                 </option>
                             </select>
                         </div>
@@ -184,26 +190,26 @@ $exempt_vat = $settings->get('exempt_vat', true);
                 <!-- Status -->
                 <div class="frf-card">
                     <div class="frf-card-header">
-                        <h2 class="frf-card-title"><?php _e('Stato', 'fatture-rf'); ?></h2>
+                        <h2 class="frf-card-title"><?php _e('Status', 'fatture-rf'); ?></h2>
                     </div>
                     
                     <div class="frf-form-group">
-                        <label for="status"><?php _e('Stato Fattura', 'fatture-rf'); ?></label>
+                        <label for="status"><?php _e('Invoice Status', 'fatture-rf'); ?></label>
                         <select id="status" name="status">
                             <option value="draft" <?php selected($invoice->status ?? 'draft', 'draft'); ?>>
-                                <?php _e('Bozza', 'fatture-rf'); ?>
+                                <?php _e('Draft', 'fatture-rf'); ?>
                             </option>
                             <option value="sent" <?php selected($invoice->status ?? '', 'sent'); ?>>
-                                <?php _e('Inviata', 'fatture-rf'); ?>
+                                <?php _e('Sent', 'fatture-rf'); ?>
                             </option>
                             <option value="paid" <?php selected($invoice->status ?? '', 'paid'); ?>>
-                                <?php _e('Pagata', 'fatture-rf'); ?>
+                                <?php _e('Paid', 'fatture-rf'); ?>
                             </option>
                             <option value="overdue" <?php selected($invoice->status ?? '', 'overdue'); ?>>
-                                <?php _e('Scaduta', 'fatture-rf'); ?>
+                                <?php _e('Overdue', 'fatture-rf'); ?>
                             </option>
                             <option value="cancelled" <?php selected($invoice->status ?? '', 'cancelled'); ?>>
-                                <?php _e('Annullata', 'fatture-rf'); ?>
+                                <?php _e('Cancelled', 'fatture-rf'); ?>
                             </option>
                         </select>
                     </div>
@@ -212,12 +218,12 @@ $exempt_vat = $settings->get('exempt_vat', true);
                 <!-- Totals -->
                 <div class="frf-card" style="margin-top: 20px;">
                     <div class="frf-card-header">
-                        <h2 class="frf-card-title"><?php _e('Totali', 'fatture-rf'); ?></h2>
+                        <h2 class="frf-card-title"><?php _e('Total', 'fatture-rf'); ?></h2>
                     </div>
                     
                     <div style="padding: 15px 0;">
                         <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
-                            <span><?php _e('Imponibile:', 'fatture-rf'); ?></span>
+                            <span><?php _e('Subtotal:', 'fatture-rf'); ?></span>
                             <strong class="display-subtotal">€ <?php echo number_format($invoice->subtotal ?? 0, 2, ',', '.'); ?></strong>
                         </div>
                         
@@ -240,26 +246,26 @@ $exempt_vat = $settings->get('exempt_vat', true);
                         <?php endif; ?>
                         
                         <div style="display: flex; justify-content: space-between; margin-bottom: 15px; padding-top: 10px; border-top: 2px solid #ddd;">
-                            <span><strong><?php _e('Totale:', 'fatture-rf'); ?></strong></span>
+                            <span><strong><?php _e('Total:', 'fatture-rf'); ?></strong></span>
                             <strong class="display-total" style="font-size: 18px;">€ <?php echo number_format($invoice->total ?? 0, 2, ',', '.'); ?></strong>
                         </div>
                         
                         <?php if ($apply_withholding): ?>
                         <div class="frf-form-group" style="margin-bottom: 15px;">
-                            <label for="withholding_tax"><?php _e('Ritenuta d\'acconto (%)', 'fatture-rf'); ?></label>
+                            <label for="withholding_tax"><?php _e('Withholding Tax (%)', 'fatture-rf'); ?></label>
                             <input type="number" id="withholding_tax" name="withholding_tax" step="0.01" 
                                    value="<?php echo esc_attr($invoice->withholding_tax ?? $withholding_rate); ?>">
                         </div>
                         
                         <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
-                            <span><?php _e('Ritenuta:', 'fatture-rf'); ?></span>
+                            <span><?php _e('Withholding:', 'fatture-rf'); ?></span>
                             <strong class="display-withholding" style="color: #d63638;">
                                 - € <?php echo number_format($invoice->withholding_amount ?? 0, 2, ',', '.'); ?>
                             </strong>
                         </div>
                         
                         <div style="display: flex; justify-content: space-between; padding-top: 10px; border-top: 2px solid #ddd;">
-                            <span><strong><?php _e('Netto a Pagare:', 'fatture-rf'); ?></strong></span>
+                            <span><strong><?php _e('Net to Pay:', 'fatture-rf'); ?></strong></span>
                             <strong class="display-net" style="font-size: 18px; color: #0a7d3e;">
                                 € <?php echo number_format($invoice->net_to_pay ?? 0, 2, ',', '.'); ?>
                             </strong>
@@ -278,11 +284,11 @@ $exempt_vat = $settings->get('exempt_vat', true);
                 <!-- Actions -->
                 <div class="frf-card" style="margin-top: 20px;">
                     <button type="submit" name="frf_save_invoice" class="button button-primary button-large" style="width: 100%;">
-                        <?php echo $is_edit ? __('Aggiorna Fattura', 'fatture-rf') : __('Salva Fattura', 'fatture-rf'); ?>
+                        <?php echo $is_edit ? __('Update Invoice', 'fatture-rf') : __('Save Invoice', 'fatture-rf'); ?>
                     </button>
                     <a href="<?php echo admin_url('admin.php?page=fatture-rf-invoices'); ?>" 
                        class="button button-large" style="width: 100%; margin-top: 10px; text-align: center;">
-                        <?php _e('Annulla', 'fatture-rf'); ?>
+                        <?php _e('Cancel', 'fatture-rf'); ?>
                     </a>
                 </div>
             </div>

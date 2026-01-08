@@ -24,7 +24,7 @@ class FRF_Client {
         
         // Validate required fields
         if (empty($data['business_name'])) {
-            return new WP_Error('invalid_data', __('Ragione sociale è obbligatoria', 'fatture-rf'));
+            return new WP_Error('invalid_data', __('Business name is required', 'fatture-rf'));
         }
         
         // Determine client type based on country
@@ -57,7 +57,7 @@ class FRF_Client {
         $result = $wpdb->insert($this->table_name, $client_data);
         
         if ($result === false) {
-            return new WP_Error('db_error', __('Errore durante la creazione del cliente', 'fatture-rf'));
+            return new WP_Error('db_error', __('Error creating client', 'fatture-rf'));
         }
         
         return $wpdb->insert_id;
@@ -72,7 +72,7 @@ class FRF_Client {
         $client_id = intval($client_id);
         
         if (!$this->exists($client_id)) {
-            return new WP_Error('not_found', __('Cliente non trovato', 'fatture-rf'));
+            return new WP_Error('not_found', __('Client not found', 'fatture-rf'));
         }
         
         // Prepare update data
@@ -183,7 +183,7 @@ class FRF_Client {
         ));
         
         if ($has_invoices > 0) {
-            return new WP_Error('has_invoices', __('Impossibile eliminare: il cliente ha fatture associate', 'fatture-rf'));
+            return new WP_Error('has_invoices', __('Cannot delete: client has associated invoices', 'fatture-rf'));
         }
         
         return $wpdb->delete($this->table_name, array('id' => intval($client_id)));
@@ -232,32 +232,32 @@ class FRF_Client {
         if ($data['client_type'] === 'IT') {
             if (empty($data['vat_number']) && empty($data['tax_code'])) {
                 return new WP_Error('validation_error', 
-                    __('Per clienti italiani è richiesta P.IVA o Codice Fiscale', 'fatture-rf'));
+                    __('Italian clients require VAT Number or Tax Code', 'fatture-rf'));
             }
             
             // Validate Partita IVA (11 digits)
             if (!empty($data['vat_number']) && !preg_match('/^\d{11}$/', $data['vat_number'])) {
                 return new WP_Error('validation_error', 
-                    __('P.IVA italiana non valida (deve essere di 11 cifre)', 'fatture-rf'));
+                    __('Invalid Italian VAT number (must be 11 digits)', 'fatture-rf'));
             }
             
             // Validate Codice Fiscale (16 alphanumeric)
             if (!empty($data['tax_code']) && !preg_match('/^[A-Z0-9]{16}$/i', $data['tax_code'])) {
                 return new WP_Error('validation_error', 
-                    __('Codice Fiscale non valido (deve essere di 16 caratteri)', 'fatture-rf'));
+                    __('Invalid Tax Code (must be 16 characters)', 'fatture-rf'));
             }
             
             // SDI code or PEC required for electronic invoicing
             if (empty($data['sdi_code']) && empty($data['pec_email'])) {
                 return new WP_Error('validation_error', 
-                    __('Per fatturazione elettronica è richiesto Codice SDI o PEC', 'fatture-rf'));
+                    __('Electronic invoicing requires SDI Code or PEC', 'fatture-rf'));
             }
         }
         
         // EU clients - require VAT number
         if ($data['client_type'] === 'EU' && empty($data['vat_number'])) {
             return new WP_Error('validation_error', 
-                __('Per clienti UE è richiesta la Partita IVA', 'fatture-rf'));
+                __('EU clients require VAT Number', 'fatture-rf'));
         }
         
         return true;

@@ -29,12 +29,12 @@ class FRF_Invoice {
         
         // Validate required fields
         if (empty($data['invoice_number']) || empty($data['client_id'])) {
-            return new WP_Error('invalid_data', __('Numero fattura e cliente sono obbligatori', 'fatture-rf'));
+            return new WP_Error('invalid_data', __('Invoice number and client are required', 'fatture-rf'));
         }
         
         // Check if invoice number already exists
         if ($this->invoice_number_exists($data['invoice_number'])) {
-            return new WP_Error('duplicate', __('Numero fattura già esistente', 'fatture-rf'));
+            return new WP_Error('duplicate', __('Invoice number already exists', 'fatture-rf'));
         }
         
         // Prepare invoice data
@@ -58,7 +58,7 @@ class FRF_Invoice {
         $result = $wpdb->insert($this->table_name, $invoice_data);
         
         if ($result === false) {
-            return new WP_Error('db_error', __('Errore durante la creazione della fattura', 'fatture-rf'));
+            return new WP_Error('db_error', __('Error creating invoice', 'fatture-rf'));
         }
         
         $invoice_id = $wpdb->insert_id;
@@ -85,7 +85,7 @@ class FRF_Invoice {
         // Get current invoice
         $current = $this->get($invoice_id);
         if (!$current) {
-            return new WP_Error('not_found', __('Fattura non trovata', 'fatture-rf'));
+            return new WP_Error('not_found', __('Invoice not found', 'fatture-rf'));
         }
         
         // Prepare update data

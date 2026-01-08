@@ -18,20 +18,20 @@ if (!defined('ABSPATH')) {
     <p style="margin-top: 10px;">
         <a href="<?php echo admin_url('admin.php?page=fatture-rf-clients&view=edit&id=' . $client->id); ?>" 
            class="button button-primary">
-            <?php _e('Modifica Cliente', 'fatture-rf'); ?>
+            <?php _e('Edit Client', 'fatture-rf'); ?>
         </a>
         <a href="<?php echo admin_url('admin.php?page=fatture-rf-invoices&view=add&client_id=' . $client->id); ?>" 
            class="button">
-            <?php _e('Nuova Fattura', 'fatture-rf'); ?>
+            <?php _e('New Invoice', 'fatture-rf'); ?>
         </a>
         <?php if ($stats->total_invoices == 0): ?>
         <a href="<?php echo wp_nonce_url(admin_url('admin.php?page=fatture-rf-clients&action=delete_client&id=' . $client->id), 'frf_action'); ?>" 
            class="button frf-delete-link" style="color: #d63638;">
-            <?php _e('Elimina Cliente', 'fatture-rf'); ?>
+            <?php _e('Delete Client', 'fatture-rf'); ?>
         </a>
         <?php endif; ?>
         <a href="<?php echo admin_url('admin.php?page=fatture-rf-clients'); ?>" class="button">
-            <?php _e('← Torna ai Clienti', 'fatture-rf'); ?>
+            <?php _e('← Back to All Clients', 'fatture-rf'); ?>
         </a>
     </p>
     
@@ -40,12 +40,12 @@ if (!defined('ABSPATH')) {
         <div>
             <div class="frf-card">
                 <div class="frf-card-header">
-                    <h2 class="frf-card-title"><?php _e('Informazioni Cliente', 'fatture-rf'); ?></h2>
+                    <h2 class="frf-card-title"><?php _e('Client Information', 'fatture-rf'); ?></h2>
                 </div>
                 
                 <table class="widefat" style="border: none;">
                     <tr>
-                        <th style="width: 200px; background: #f8f9fa;"><?php _e('Ragione Sociale', 'fatture-rf'); ?></th>
+                        <th style="width: 200px; background: #f8f9fa;"><?php _e('Business Name', 'fatture-rf'); ?></th>
                         <td><strong><?php echo esc_html($client->business_name); ?></strong></td>
                     </tr>
                     <?php if (!empty($client->vat_number)): ?>
@@ -61,7 +61,7 @@ if (!defined('ABSPATH')) {
                     </tr>
                     <?php endif; ?>
                     <tr>
-                        <th style="background: #f8f9fa;"><?php _e('Tipo Cliente', 'fatture-rf'); ?></th>
+                        <th style="background: #f8f9fa;"><?php _e('Client Type', 'fatture-rf'); ?></th>
                         <td><?php echo FRF_Admin_Clients::get_client_type_badge($client->client_type); ?></td>
                     </tr>
                     <?php if (!empty($client->address)): ?>
@@ -109,10 +109,10 @@ if (!defined('ABSPATH')) {
             <div class="frf-card" style="margin-top: 20px;">
                 <div class="frf-card-header">
                     <h2 class="frf-card-title">
-                        <?php _e('Fatture', 'fatture-rf'); ?>
+                        <?php _e('Invoices', 'fatture-rf'); ?>
                         <a href="<?php echo admin_url('admin.php?page=fatture-rf-invoices&view=add&client_id=' . $client->id); ?>" 
                            class="button button-small" style="float: right;">
-                            <?php _e('+ Nuova Fattura', 'fatture-rf'); ?>
+                            <?php _e('+ New Invoice', 'fatture-rf'); ?>
                         </a>
                     </h2>
                 </div>
@@ -121,11 +121,11 @@ if (!defined('ABSPATH')) {
                 <table class="frf-table">
                     <thead>
                         <tr>
-                            <th><?php _e('Numero', 'fatture-rf'); ?></th>
-                            <th><?php _e('Data', 'fatture-rf'); ?></th>
-                            <th><?php _e('Importo', 'fatture-rf'); ?></th>
-                            <th><?php _e('Stato', 'fatture-rf'); ?></th>
-                            <th><?php _e('Azioni', 'fatture-rf'); ?></th>
+                            <th><?php _e('Number', 'fatture-rf'); ?></th>
+                            <th><?php _e('Date', 'fatture-rf'); ?></th>
+                            <th><?php _e('Amount', 'fatture-rf'); ?></th>
+                            <th><?php _e('Status', 'fatture-rf'); ?></th>
+                            <th><?php _e('Actions', 'fatture-rf'); ?></th>
                         </tr>
                     </thead>
                     <tbody>
@@ -138,7 +138,7 @@ if (!defined('ABSPATH')) {
                             <td class="frf-actions">
                                 <a href="<?php echo admin_url('admin.php?page=fatture-rf-invoices&view=view&id=' . $invoice->id); ?>" 
                                    class="frf-action-link">
-                                    <?php _e('Visualizza', 'fatture-rf'); ?>
+                                    <?php _e('View', 'fatture-rf'); ?>
                                 </a>
                             </td>
                         </tr>
@@ -147,7 +147,7 @@ if (!defined('ABSPATH')) {
                 </table>
                 <?php else: ?>
                 <p style="padding: 20px; text-align: center; color: #666;">
-                    <?php _e('Nessuna fattura trovata per questo cliente.', 'fatture-rf'); ?>
+                    <?php _e('No invoices found for this client.', 'fatture-rf'); ?>
                 </p>
                 <?php endif; ?>
             </div>
@@ -157,13 +157,13 @@ if (!defined('ABSPATH')) {
         <div>
             <div class="frf-card">
                 <div class="frf-card-header">
-                    <h2 class="frf-card-title"><?php _e('Statistiche', 'fatture-rf'); ?></h2>
+                    <h2 class="frf-card-title"><?php _e('Statistics', 'fatture-rf'); ?></h2>
                 </div>
                 
                 <div style="padding: 10px 0;">
                     <div style="padding: 15px; background: #f8f9fa; border-radius: 4px; margin-bottom: 15px;">
                         <div style="font-size: 12px; color: #666; margin-bottom: 5px;">
-                            <?php _e('Totale Fatture', 'fatture-rf'); ?>
+                            <?php _e('Total Invoices', 'fatture-rf'); ?>
                         </div>
                         <div style="font-size: 28px; font-weight: bold; color: #2271b1;">
                             <?php echo number_format($stats->total_invoices, 0, ',', '.'); ?>
@@ -172,7 +172,7 @@ if (!defined('ABSPATH')) {
                     
                     <div style="padding: 15px; background: #f8f9fa; border-radius: 4px; margin-bottom: 15px;">
                         <div style="font-size: 12px; color: #666; margin-bottom: 5px;">
-                            <?php _e('Fatture Pagate', 'fatture-rf'); ?>
+                            <?php _e('Paid Invoices', 'fatture-rf'); ?>
                         </div>
                         <div style="font-size: 28px; font-weight: bold; color: #0a7d3e;">
                             <?php echo number_format($stats->paid_invoices, 0, ',', '.'); ?>
@@ -181,7 +181,7 @@ if (!defined('ABSPATH')) {
                     
                     <div style="padding: 15px; background: #f8f9fa; border-radius: 4px; margin-bottom: 15px;">
                         <div style="font-size: 12px; color: #666; margin-bottom: 5px;">
-                            <?php _e('Totale Incassato', 'fatture-rf'); ?>
+                            <?php _e('Total Received', 'fatture-rf'); ?>
                         </div>
                         <div style="font-size: 24px; font-weight: bold; color: #0a7d3e;">
                             € <?php echo number_format($stats->total_paid, 2, ',', '.'); ?>
@@ -190,7 +190,7 @@ if (!defined('ABSPATH')) {
                     
                     <div style="padding: 15px; background: #f8f9fa; border-radius: 4px;">
                         <div style="font-size: 12px; color: #666; margin-bottom: 5px;">
-                            <?php _e('Da Incassare', 'fatture-rf'); ?>
+                            <?php _e('Outstanding', 'fatture-rf'); ?>
                         </div>
                         <div style="font-size: 24px; font-weight: bold; color: #d63638;">
                             € <?php echo number_format($stats->total_outstanding, 2, ',', '.'); ?>
@@ -201,17 +201,17 @@ if (!defined('ABSPATH')) {
             
             <div class="frf-card" style="margin-top: 20px;">
                 <div class="frf-card-header">
-                    <h2 class="frf-card-title"><?php _e('Info Rapide', 'fatture-rf'); ?></h2>
+                    <h2 class="frf-card-title"><?php _e('Quick Info', 'fatture-rf'); ?></h2>
                 </div>
                 
                 <div style="padding: 10px 0; font-size: 13px;">
                     <p style="margin: 10px 0;">
-                        <strong><?php _e('Cliente dal:', 'fatture-rf'); ?></strong><br>
+                        <strong><?php _e('Client since:', 'fatture-rf'); ?></strong><br>
                         <?php echo date_i18n(get_option('date_format'), strtotime($client->created_at)); ?>
                     </p>
                     <?php if ($client->updated_at != $client->created_at): ?>
                     <p style="margin: 10px 0;">
-                        <strong><?php _e('Ultimo aggiornamento:', 'fatture-rf'); ?></strong><br>
+                        <strong><?php _e('Last updated:', 'fatture-rf'); ?></strong><br>
                         <?php echo date_i18n(get_option('date_format'), strtotime($client->updated_at)); ?>
                     </p>
                     <?php endif; ?>
