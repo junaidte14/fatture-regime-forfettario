@@ -98,10 +98,10 @@ $business_info = $settings->get_business_info();
     <?php if (empty($business_info['business_name']) || empty($business_info['vat_number'])): ?>
     <div class="notice notice-warning" style="margin: 20px 0;">
         <p>
-            <strong><?php _e('Attenzione:', 'fatture-rf'); ?></strong>
-            <?php _e('Configura i dati aziendali per iniziare a emettere fatture.', 'fatture-rf'); ?>
+            <strong><?php _e('Attention:', 'fatture-rf'); ?></strong>
+            <?php _e('Configure your business data in settings for complete invoices.', 'fatture-rf'); ?>
             <a href="<?php echo admin_url('admin.php?page=fatture-rf-settings'); ?>">
-                <?php _e('Vai alle impostazioni', 'fatture-rf'); ?>
+                <?php _e('Go to settings', 'fatture-rf'); ?>
             </a>
         </p>
     </div>
