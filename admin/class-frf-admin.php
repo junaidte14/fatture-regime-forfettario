@@ -28,6 +28,13 @@ class FRF_Admin {
         add_action('wp_ajax_frf_export_invoice_pdf', array($this, 'ajax_export_pdf'));
         add_action('wp_ajax_frf_change_invoice_status', array($this, 'ajax_change_status'));
         add_action('wp_ajax_frf_search_clients', array($this, 'ajax_search_clients'));
+
+        add_action('wp_ajax_frf_test_woo_connection', array($this, 'ajax_test_woo_connection'));
+        add_action('wp_ajax_frf_sync_woo_store', array($this, 'ajax_sync_woo_store'));
+        add_action('wp_ajax_frf_create_invoice_from_woo_order', array($this, 'ajax_create_invoice_from_order'));
+
+        // Register WooCommerce auto-sync cron job
+        add_action('frf_woocommerce_auto_sync', array($this, 'run_auto_sync'));
     }
     
     /**
@@ -74,6 +81,15 @@ class FRF_Admin {
             'fatture-rf-clients',
             array('FRF_Admin_Clients', 'render')
         );
+
+        add_submenu_page(
+            'fatture-rf',
+            __('WooCommerce', 'fatture-rf'),
+            __('WooCommerce', 'fatture-rf'),
+            'manage_options',
+            'fatture-rf-woocommerce',
+            array($this, 'render_woocommerce')
+        );
         
         // Settings
         add_submenu_page(
@@ -84,6 +100,16 @@ class FRF_Admin {
             'fatture-rf-settings',
             array('FRF_Admin_Settings', 'render')
         );
+    }
+
+    public function render_woocommerce() {
+        $view = isset($_GET['view']) ? sanitize_text_field($_GET['view']) : 'stores';
+        
+        if ($view === 'orders') {
+            FRF_Admin_WooCommerce::render_orders();
+        } else {
+            FRF_Admin_WooCommerce::render_stores();
+        }
     }
     
     /**
@@ -314,4 +340,47 @@ class FRF_Admin {
         
         wp_send_json_success($results);
     }
+
+    /**
+     * AJAX: Test WooCommerce connection
+     */
+    public function ajax_test_woo_connection() {
+        FRF_Admin_WooCommerce::ajax_test_connection();
+    }
+
+    /**
+     * AJAX: Sync WooCommerce store
+     */
+    public function ajax_sync_woo_store() {
+        FRF_Admin_WooCommerce::ajax_sync_store();
+    }
+
+    /**
+     * AJAX: Create invoice from WooCommerce order
+     */
+    public function ajax_create_invoice_from_order() {
+        check_ajax_referer('frf_admin_nonce', 'nonce');   
+        if (!current_user_can('manage_options')) {
+            wp_send_json_error(array('message' => __('Accesso non autorizzato', 'fatture-rf')));
+        }
+        $order_id = intval($_POST['order_id']);
+        $sync = new FRF_WooCommerce_Sync();
+        $invoice_id = $sync->create_invoice_from_order($order_id);
+        if (is_wp_error($invoice_id)) {
+            wp_send_json_error(array('message' => $invoice_id->get_error_message()));
+        }
+        wp_send_json_success(array(
+            'message' => __('Fattura creata con successo', 'fatture-rf'),
+            'invoice_id' => $invoice_id
+        ));
+    }
+
+    /**
+     * Run auto-sync for all stores
+     */
+    public function run_auto_sync() {
+        $sync = new FRF_WooCommerce_Sync();
+        $sync->sync_all_stores();
+    }
+
 }

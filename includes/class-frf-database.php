@@ -105,6 +105,59 @@ class FRF_Database {
             KEY changed_at (changed_at),
             CONSTRAINT fk_invoice_history FOREIGN KEY (invoice_id) REFERENCES $table_invoices(id) ON DELETE CASCADE
         ) $charset_collate;";
+
+        /**
+         * WooCommerce Stores table
+         */
+        $table_stores = $wpdb->prefix . 'frf_woo_stores';
+        $sql_stores = "CREATE TABLE IF NOT EXISTS $table_stores (
+            id bigint(20) NOT NULL AUTO_INCREMENT,
+            store_name varchar(200) NOT NULL,
+            store_url varchar(255) NOT NULL,
+            consumer_key varchar(255) NOT NULL,
+            consumer_secret varchar(255) NOT NULL,
+            sync_from_date date DEFAULT NULL,
+            auto_sync tinyint(1) DEFAULT 0,
+            sync_interval int(11) DEFAULT 60,
+            status enum('active','inactive','error') DEFAULT 'active',
+            last_sync_at datetime DEFAULT NULL,
+            created_at datetime DEFAULT CURRENT_TIMESTAMP,
+            updated_at datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+            PRIMARY KEY (id),
+            KEY status (status),
+            KEY auto_sync (auto_sync)
+        ) $charset_collate;";
+
+        /**
+         * WooCommerce Orders table
+         */
+        $table_woo_orders = $wpdb->prefix . 'frf_woo_orders';
+        $sql_woo_orders = "CREATE TABLE IF NOT EXISTS $table_woo_orders (
+            id bigint(20) NOT NULL AUTO_INCREMENT,
+            store_id bigint(20) NOT NULL,
+            woo_order_id bigint(20) NOT NULL,
+            order_number varchar(50) NOT NULL,
+            order_date datetime NOT NULL,
+            status varchar(50) NOT NULL,
+            customer_data longtext NOT NULL,
+            items_data longtext NOT NULL,
+            subtotal decimal(10,2) NOT NULL DEFAULT 0.00,
+            tax decimal(10,2) NOT NULL DEFAULT 0.00,
+            total decimal(10,2) NOT NULL DEFAULT 0.00,
+            currency varchar(10) DEFAULT 'EUR',
+            payment_method varchar(100) DEFAULT NULL,
+            invoice_id bigint(20) DEFAULT NULL,
+            raw_data longtext DEFAULT NULL,
+            created_at datetime DEFAULT CURRENT_TIMESTAMP,
+            updated_at datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+            PRIMARY KEY (id),
+            UNIQUE KEY store_order (store_id, woo_order_id),
+            KEY store_id (store_id),
+            KEY invoice_id (invoice_id),
+            KEY order_date (order_date),
+            KEY status (status),
+            CONSTRAINT fk_woo_store FOREIGN KEY (store_id) REFERENCES $table_stores(id) ON DELETE CASCADE
+        ) $charset_collate;";
         
         require_once(ABSPATH . 'wp-admin/includes/upgrade.php');
         
@@ -112,6 +165,21 @@ class FRF_Database {
         dbDelta($sql_invoices);
         dbDelta($sql_items);
         dbDelta($sql_history);
+        dbDelta($sql_stores);
+        dbDelta($sql_woo_orders);
+
+        // Add WooCommerce fields to clients table
+        $wpdb->query("ALTER TABLE {$table_clients} 
+            ADD COLUMN IF NOT EXISTS woo_store_id bigint(20) DEFAULT NULL AFTER sdi_code,
+            ADD COLUMN IF NOT EXISTS woo_customer_id bigint(20) DEFAULT NULL AFTER woo_store_id,
+            ADD INDEX IF NOT EXISTS woo_store_id (woo_store_id)
+        ");
+
+        // Add WooCommerce field to invoices table  
+        $wpdb->query("ALTER TABLE {$table_invoices} 
+            ADD COLUMN IF NOT EXISTS woo_order_id bigint(20) DEFAULT NULL AFTER xml_file_path,
+            ADD INDEX IF NOT EXISTS woo_order_id (woo_order_id)
+        ");
         
         // Save database version
         update_option('frf_db_version', FRF_VERSION);

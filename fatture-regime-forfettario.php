@@ -60,6 +60,9 @@ class Fatture_Regime_Forfettario {
         require_once FRF_PLUGIN_DIR . 'includes/class-frf-client.php';
         require_once FRF_PLUGIN_DIR . 'includes/class-frf-settings.php';
         require_once FRF_PLUGIN_DIR . 'includes/class-frf-pdf-generator.php';
+        // NEW: WooCommerce Integration
+        require_once FRF_PLUGIN_DIR . 'includes/class-frf-woo-store.php';
+        require_once FRF_PLUGIN_DIR . 'includes/class-frf-woo-sync.php';    
         
         // Admin classes
         if (is_admin()) {
@@ -67,6 +70,7 @@ class Fatture_Regime_Forfettario {
             require_once FRF_PLUGIN_DIR . 'admin/class-frf-admin-invoices.php';
             require_once FRF_PLUGIN_DIR . 'admin/class-frf-admin-clients.php';
             require_once FRF_PLUGIN_DIR . 'admin/class-frf-admin-settings.php';
+            require_once FRF_PLUGIN_DIR . 'admin/class-frf-admin-woocommerce.php';
         }
     }
     
@@ -87,6 +91,11 @@ class Fatture_Regime_Forfettario {
     public function activate() {
         FRF_Database::create_tables();
         flush_rewrite_rules();
+
+        // Schedule WooCommerce auto-sync
+        if (!wp_next_scheduled('frf_woocommerce_auto_sync')) {
+            wp_schedule_event(time(), 'hourly', 'frf_woocommerce_auto_sync');
+        }
     }
     
     /**
@@ -94,6 +103,8 @@ class Fatture_Regime_Forfettario {
      */
     public function deactivate() {
         flush_rewrite_rules();
+        // Remove scheduled events
+        wp_clear_scheduled_hook('frf_woocommerce_auto_sync');
     }
     
     /**
@@ -101,6 +112,12 @@ class Fatture_Regime_Forfettario {
      */
     public function load_textdomain() {
         load_plugin_textdomain('fatture-rf', false, dirname(FRF_PLUGIN_BASENAME) . '/languages');
+    }
+
+    // NEW: Auto-sync method
+    public function run_auto_sync() {
+        $sync = new FRF_WooCommerce_Sync();
+        $sync->sync_all_stores();
     }
     
     /**
@@ -110,6 +127,9 @@ class Fatture_Regime_Forfettario {
         if (is_admin()) {
             FRF_Admin::get_instance();
         }
+
+        // NEW: Register auto-sync action
+        add_action('frf_woocommerce_auto_sync', array($this, 'run_auto_sync'));
     }
 }
 
