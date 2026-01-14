@@ -79,6 +79,9 @@ if (!defined('ABSPATH')) {
             foreach ($orders as $order): 
                 $store = $store_model->get_store($order->store_id);
                 $customer = json_decode($order->customer_data, true);
+                var_dump($store);
+                var_dump($customer);
+                var_dump($order);
             ?>
             <tr>
                 <td>

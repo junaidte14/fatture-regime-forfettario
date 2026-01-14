@@ -1,6 +1,6 @@
 <?php
 /**
- * WooCommerce Sync Class
+ * WooCommerce Sync Class - COMPLETE FIXED VERSION
  * Path: includes/class-frf-woo-sync.php
  * Handles syncing orders and customers from WooCommerce stores
  */
@@ -21,7 +21,7 @@ class FRF_WooCommerce_Sync {
     }
     
     /**
-     * Sync orders from a specific store
+     * Sync orders from a specific store - FIXED VERSION
      */
     public function sync_store_orders($store_id, $limit = 50) {
         $store = $this->store_model->get_store($store_id);
@@ -31,23 +31,33 @@ class FRF_WooCommerce_Sync {
         }
         
         // Prepare API parameters
-        $sync_date = !empty($store->sync_from_date) ? $store->sync_from_date : '-30 days';
         $params = array(
             'per_page' => $limit,
             'orderby'  => 'date',
             'order'    => 'desc',
         );
+        
+        // Determine the start date for sync
         $last_synced = $this->get_last_synced_date($store_id);
-        // Default: 30 days ago
-        $timestamp = time() - (30 * DAY_IN_SECONDS);
+        
         if (!empty($last_synced) && $last_synced !== '0000-00-00 00:00:00') {
-            $parsed = strtotime($last_synced);
-            if ($parsed !== false) {
-                $timestamp = $parsed;
-            }
+            // Use last synced date if available
+            $timestamp = strtotime($last_synced);
+        } elseif (!empty($store->sync_from_date) && $store->sync_from_date !== '0000-00-00') {
+            // Use configured sync_from_date
+            $timestamp = strtotime($store->sync_from_date . ' 00:00:00');
+        } else {
+            // Default: 30 days ago
+            $timestamp = strtotime('-30 days');
         }
-        // RFC3339 in UTC with timezone
-        $params['after'] = gmdate('Y-m-d\TH:i:s\Z', $timestamp);
+        
+        // Format as ISO 8601 (WooCommerce REST API format)
+        // Subtract 1 second to avoid duplicate on subsequent syncs
+        if (!empty($last_synced)) {
+            $timestamp = $timestamp + 1;
+        }
+        
+        $params['after'] = gmdate('Y-m-d\TH:i:s\Z', $timestamp); // ISO 8601 format
 
         // Fetch orders from WooCommerce
         $orders = $this->store_model->api_request($store_id, 'orders', 'GET', $params);
@@ -84,7 +94,7 @@ class FRF_WooCommerce_Sync {
     }
     
     /**
-     * Save WooCommerce order to local database
+     * Save WooCommerce order to local database - ENHANCED VERSION
      */
     private function save_order($store_id, $order_data) {
         global $wpdb;
@@ -97,6 +107,13 @@ class FRF_WooCommerce_Sync {
             $order_data['id']
         ));
         
+        // Extract customer and items data
+        $customer_data = $this->extract_customer_data($order_data);
+        $items_data = $this->extract_items_data($order_data);
+        
+        // Extract marca da bollo information from fees
+        $bollo_info = $this->extract_bollo_info($order_data);
+        
         // Map WooCommerce order to our format
         $order = array(
             'store_id' => $store_id,
@@ -104,14 +121,23 @@ class FRF_WooCommerce_Sync {
             'order_number' => sanitize_text_field($order_data['number']),
             'order_date' => date('Y-m-d H:i:s', strtotime($order_data['date_created'])),
             'status' => sanitize_text_field($order_data['status']),
-            'customer_data' => json_encode($this->extract_customer_data($order_data)),
-            'items_data' => json_encode($this->extract_items_data($order_data)),
-            'subtotal' => floatval($order_data['total']) - floatval($order_data['total_tax']),
+            'customer_data' => json_encode($customer_data),
+            'items_data' => json_encode($items_data),
+            'subtotal' => floatval($order_data['total']) - floatval($order_data['total_tax']) - floatval($bollo_info['amount']),
             'tax' => floatval($order_data['total_tax']),
             'total' => floatval($order_data['total']),
             'currency' => sanitize_text_field($order_data['currency']),
             'payment_method' => sanitize_text_field($order_data['payment_method_title'] ?? ''),
-            'raw_data' => json_encode($order_data)
+            'raw_data' => json_encode(array(
+                'order' => $order_data,
+                'bollo' => $bollo_info,
+                'fiscal_data' => array(
+                    'codice_fiscale' => $customer_data['codice_fiscale'],
+                    'partita_iva' => $customer_data['partita_iva'],
+                    'sdi' => $customer_data['sdi'],
+                    'pec' => $customer_data['pec']
+                )
+            ))
         );
         
         if ($existing) {
@@ -134,11 +160,32 @@ class FRF_WooCommerce_Sync {
     }
     
     /**
-     * Extract customer data from WooCommerce order
+     * Extract customer data from WooCommerce order - ENHANCED VERSION
      */
     private function extract_customer_data($order) {
         $billing = $order['billing'];
         $shipping = $order['shipping'];
+        
+        // Extract Italian fiscal fields from meta_data
+        $meta_data = isset($order['meta_data']) ? $order['meta_data'] : array();
+        $codice_fiscale = $this->get_meta_value($meta_data, 'billing_codice_fiscale');
+        $partita_iva = $this->get_meta_value($meta_data, 'billing_partita_iva');
+        $sdi = $this->get_meta_value($meta_data, 'billing_sdi');
+        $pec = $this->get_meta_value($meta_data, 'billing_pec');
+        
+        // Alternative meta key names (some plugins use different keys)
+        if (empty($codice_fiscale)) {
+            $codice_fiscale = $this->get_meta_value($meta_data, '_billing_cf');
+        }
+        if (empty($partita_iva)) {
+            $partita_iva = $this->get_meta_value($meta_data, '_billing_vat_number');
+        }
+        if (empty($sdi)) {
+            $sdi = $this->get_meta_value($meta_data, '_billing_codice_sdi');
+        }
+        if (empty($pec)) {
+            $pec = $this->get_meta_value($meta_data, '_billing_pec_email');
+        }
         
         return array(
             'email' => $billing['email'] ?? '',
@@ -162,8 +209,14 @@ class FRF_WooCommerce_Sync {
                 'postcode' => $shipping['postcode'] ?? '',
                 'country' => $shipping['country'] ?? ''
             ),
-            'vat_number' => $order['meta_data'] ? $this->get_meta_value($order['meta_data'], '_billing_vat_number') : '',
-            'tax_code' => $order['meta_data'] ? $this->get_meta_value($order['meta_data'], '_billing_cf') : ''
+            // Italian fiscal fields
+            'codice_fiscale' => $codice_fiscale,
+            'partita_iva' => $partita_iva,
+            'sdi' => $sdi,
+            'pec' => $pec,
+            // Legacy fields for backwards compatibility
+            'vat_number' => $partita_iva,
+            'tax_code' => $codice_fiscale
         );
     }
     
@@ -199,6 +252,46 @@ class FRF_WooCommerce_Sync {
             }
         }
         return '';
+    }
+    
+    /**
+     * Extract marca da bollo information from order - NEW METHOD
+     */
+    private function extract_bollo_info($order_data) {
+        $bollo_info = array(
+            'applied' => false,
+            'amount' => 0
+        );
+        
+        // Check fees for marca da bollo
+        if (isset($order_data['fee_lines']) && is_array($order_data['fee_lines'])) {
+            foreach ($order_data['fee_lines'] as $fee) {
+                $fee_name = isset($fee['name']) ? strtolower($fee['name']) : '';
+                
+                // Check if this is a marca da bollo fee
+                if (strpos($fee_name, 'bollo') !== false || 
+                    strpos($fee_name, 'imposta di bollo') !== false ||
+                    strpos($fee_name, 'stamp') !== false) {
+                    
+                    $bollo_info['applied'] = true;
+                    $bollo_info['amount'] = abs(floatval($fee['total']));
+                    break;
+                }
+            }
+        }
+        
+        // Also check meta data
+        if (!$bollo_info['applied'] && isset($order_data['meta_data'])) {
+            $meta_bollo_applied = $this->get_meta_value($order_data['meta_data'], '_forfettario_bollo_applied');
+            $meta_bollo_amount = $this->get_meta_value($order_data['meta_data'], '_forfettario_bollo_amount');
+            
+            if ($meta_bollo_applied === 'yes' || $meta_bollo_applied === true) {
+                $bollo_info['applied'] = true;
+                $bollo_info['amount'] = floatval($meta_bollo_amount);
+            }
+        }
+        
+        return $bollo_info;
     }
     
     /**
@@ -268,7 +361,39 @@ class FRF_WooCommerce_Sync {
     }
     
     /**
-     * Create or get client from order
+     * Delete synced order - NEW METHOD
+     */
+    public function delete_order($order_id) {
+        global $wpdb;
+        
+        $order = $this->get_order($order_id);
+        
+        if (!$order) {
+            return new WP_Error('not_found', __('Ordine non trovato', 'fatture-rf'));
+        }
+        
+        // Check if order has an associated invoice
+        if ($order->invoice_id) {
+            return new WP_Error('has_invoice', 
+                __('Impossibile eliminare: l\'ordine ha una fattura associata. Elimina prima la fattura.', 'fatture-rf'));
+        }
+        
+        // Delete the order
+        $result = $wpdb->delete(
+            $this->orders_table,
+            array('id' => intval($order_id)),
+            array('%d')
+        );
+        
+        if ($result === false) {
+            return new WP_Error('delete_failed', __('Errore durante l\'eliminazione dell\'ordine', 'fatture-rf'));
+        }
+        
+        return true;
+    }
+    
+    /**
+     * Get or create client from order
      */
     public function get_or_create_client($order_id) {
         $order = $this->get_order($order_id);
@@ -286,15 +411,23 @@ class FRF_WooCommerce_Sync {
         
         $existing_client = null;
         
-        // Try to find by VAT number first
-        if (!empty($customer['vat_number'])) {
+        // Try to find by Partita IVA first
+        if (!empty($customer['partita_iva'])) {
             $existing_client = $wpdb->get_row($wpdb->prepare(
                 "SELECT * FROM {$clients_table} WHERE vat_number = %s",
-                $customer['vat_number']
+                $customer['partita_iva']
             ));
         }
         
-        // Try by email if not found
+        // Try by Codice Fiscale if not found
+        if (!$existing_client && !empty($customer['codice_fiscale'])) {
+            $existing_client = $wpdb->get_row($wpdb->prepare(
+                "SELECT * FROM {$clients_table} WHERE tax_code = %s",
+                $customer['codice_fiscale']
+            ));
+        }
+        
+        // Try by email if still not found
         if (!$existing_client && !empty($customer['email'])) {
             $existing_client = $wpdb->get_row($wpdb->prepare(
                 "SELECT * FROM {$clients_table} WHERE email = %s",
@@ -306,7 +439,7 @@ class FRF_WooCommerce_Sync {
             return $existing_client->id;
         }
         
-        // Create new client
+        // Create new client with enhanced fiscal data
         $billing = $customer['billing_address'];
         
         $business_name = !empty($customer['company']) ? 
@@ -315,8 +448,8 @@ class FRF_WooCommerce_Sync {
         
         $client_data = array(
             'business_name' => $business_name,
-            'vat_number' => $customer['vat_number'] ?? '',
-            'tax_code' => $customer['tax_code'] ?? '',
+            'vat_number' => $customer['partita_iva'] ?? '',
+            'tax_code' => $customer['codice_fiscale'] ?? '',
             'email' => $customer['email'] ?? '',
             'phone' => $customer['phone'] ?? '',
             'address' => trim(($billing['address_1'] ?? '') . ' ' . ($billing['address_2'] ?? '')),
@@ -324,6 +457,8 @@ class FRF_WooCommerce_Sync {
             'province' => $billing['state'] ?? '',
             'postal_code' => $billing['postcode'] ?? '',
             'country' => $billing['country'] ?? 'IT',
+            'sdi_code' => $customer['sdi'] ?? '',
+            'pec_email' => $customer['pec'] ?? '',
             'woo_store_id' => $order->store_id,
             'woo_customer_id' => $order->woo_order_id
         );
@@ -332,19 +467,36 @@ class FRF_WooCommerce_Sync {
     }
     
     /**
-     * Create invoice from WooCommerce order
+     * Create invoice from WooCommerce order - FIXED VERSION
      */
     public function create_invoice_from_order($order_id) {
+        global $wpdb;
         $order = $this->get_order($order_id);
         
         if (!$order) {
             return new WP_Error('order_not_found', __('Ordine non trovato', 'fatture-rf'));
         }
         
-        // Check if invoice already exists
+        // Check if invoice already exists and is valid
         if ($order->invoice_id) {
-            return new WP_Error('invoice_exists', 
-                __('Fattura già creata per questo ordine', 'fatture-rf'));
+            $invoice_model = new FRF_Invoice();
+            $existing_invoice = $invoice_model->get($order->invoice_id);
+            
+            // If invoice exists and is valid, return error
+            if ($existing_invoice) {
+                return new WP_Error('invoice_exists', 
+                    __('Fattura già creata per questo ordine', 'fatture-rf'));
+            } else {
+                // Invoice was deleted, clear the reference
+                $wpdb->update(
+                    $this->orders_table,
+                    array('invoice_id' => null),
+                    array('id' => $order_id),
+                    array('%d'),
+                    array('%d')
+                );
+                $order->invoice_id = null;
+            }
         }
         
         // Get or create client
@@ -386,8 +538,7 @@ class FRF_WooCommerce_Sync {
             'net_to_pay' => $order->total,
             'payment_method' => $order->payment_method,
             'payment_terms' => $settings->get('default_payment_terms'),
-            'notes' => sprintf(__('Fattura generata da ordine WooCommerce #%s', 'fatture-rf'), 
-                $order->order_number),
+            'notes' => $this->build_invoice_notes($order, $settings),
             'status' => 'draft',
             'items' => $items,
             'woo_order_id' => $order->id
@@ -401,7 +552,6 @@ class FRF_WooCommerce_Sync {
         }
         
         // Link invoice to order
-        global $wpdb;
         $wpdb->update(
             $this->orders_table,
             array('invoice_id' => $invoice_id),
@@ -409,6 +559,27 @@ class FRF_WooCommerce_Sync {
         );
         
         return $invoice_id;
+    }
+    
+    /**
+     * Build invoice notes from order and settings - NEW METHOD
+     */
+    private function build_invoice_notes($order, $settings) {
+        $notes_parts = array();
+        
+        // Add default notes from settings if configured
+        $default_notes = $settings->get('default_notes');
+        if (!empty($default_notes)) {
+            $notes_parts[] = $default_notes;
+        }
+        
+        // Add WooCommerce order reference
+        $notes_parts[] = sprintf(
+            __('Riferimento ordine WooCommerce #%s', 'fatture-rf'),
+            $order->order_number
+        );
+        
+        return implode("\n\n", $notes_parts);
     }
     
     /**

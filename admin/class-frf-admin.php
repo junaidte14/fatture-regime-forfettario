@@ -259,10 +259,13 @@ class FRF_Admin {
     }
 
     /**
-     * Handle PDF export via AJAX
+     * Handle PDF export via AJAX - FIXED VERSION
      */
     public function ajax_export_pdf() {
-        check_ajax_referer('frf_admin_nonce', 'nonce');
+        // Verify nonce
+        if (!isset($_GET['nonce']) || !wp_verify_nonce($_GET['nonce'], 'frf_admin_nonce')) {
+            wp_die(__('Security check failed', 'fatture-rf'));
+        }
         
         if (!current_user_can('manage_options')) {
             wp_die(__('Unauthorized access', 'fatture-rf'));
@@ -278,13 +281,21 @@ class FRF_Admin {
         require_once FRF_PLUGIN_DIR . 'includes/class-frf-pdf-generator.php';
         
         $pdf_generator = new FRF_PDF_Generator();
-        $result = $pdf_generator->generate($invoice_id);
         
-        if (is_wp_error($result)) {
-            wp_die($result->get_error_message());
+        // Generate and output PDF
+        try {
+            $result = $pdf_generator->generate($invoice_id);
+            
+            if (is_wp_error($result)) {
+                wp_die($result->get_error_message());
+            }
+            
+            // If we reach here, PDF was generated successfully
+            exit;
+            
+        } catch (Exception $e) {
+            wp_die('Error generating PDF: ' . $e->getMessage());
         }
-        
-        exit;
     }
 
     /**

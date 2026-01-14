@@ -1,5 +1,5 @@
 /**
- * Fatture Regime Forfettario - Admin JavaScript
+ * Fatture Regime Forfettario - Admin JavaScript (FIXED)
  */
 
 (function($) {
@@ -26,10 +26,15 @@
                 e.preventDefault();
                 
                 const template = $('#frf-item-template').html();
-                const index = $('.frf-invoice-items tbody tr').length;
+                const index = Date.now(); // Use timestamp for unique index
                 const row = template.replace(/INDEX/g, index);
                 
                 $('.frf-invoice-items tbody').append(row);
+                
+                // Trigger calculation for new row
+                $('.frf-invoice-items tbody tr:last-child .item-quantity').val(1);
+                $('.frf-invoice-items tbody tr:last-child .item-unit-price').val(0);
+                $('.frf-invoice-items tbody tr:last-child .item-total').val(0);
             });
             
             // Remove invoice item
@@ -39,6 +44,8 @@
                 if ($('.frf-invoice-items tbody tr').length > 1) {
                     $(this).closest('tr').remove();
                     FRF_Admin.calculateInvoiceTotals();
+                } else {
+                    alert('È necessario almeno un elemento nella fattura');
                 }
             });
             
@@ -54,9 +61,14 @@
             });
             
             // Calculate totals on tax input
-            $(document).on('input', '#tax_rate, #withholding_tax', function() {
+            $(document).on('input change', '#tax_rate, #withholding_tax', function() {
                 FRF_Admin.calculateInvoiceTotals();
             });
+            
+            // Initial calculation on page load
+            if ($('.frf-invoice-items tbody tr').length > 0) {
+                FRF_Admin.calculateInvoiceTotals();
+            }
         },
         
         /**
@@ -67,10 +79,11 @@
             
             // Sum all items
             $('.item-total').each(function() {
-                subtotal += parseFloat($(this).val()) || 0;
+                const val = parseFloat($(this).val()) || 0;
+                subtotal += val;
             });
             
-            // Get tax rate
+            // Get tax rate (default to 0 for regime forfettario)
             const taxRate = parseFloat($('#tax_rate').val()) || 0;
             const taxAmount = (subtotal * taxRate) / 100;
             const total = subtotal + taxAmount;
@@ -80,7 +93,7 @@
             const withholdingAmount = (subtotal * withholdingTaxRate) / 100;
             const netToPay = total - withholdingAmount;
             
-            // Update fields
+            // Update hidden fields
             $('#subtotal').val(subtotal.toFixed(2));
             $('#tax_amount').val(taxAmount.toFixed(2));
             $('#total').val(total.toFixed(2));
@@ -254,6 +267,9 @@
     // Initialize on document ready
     $(document).ready(function() {
         FRF_Admin.init();
+        
+        // Initialize PDF export separately
+        FRF_Admin.exportInvoicePDF();
     });
     
 })(jQuery);
