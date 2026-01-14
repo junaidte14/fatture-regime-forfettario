@@ -50,8 +50,7 @@ class FRF_WooCommerce_Store {
             'store_url' => $store_url,
             'consumer_key' => sanitize_text_field($data['consumer_key']),
             'consumer_secret' => sanitize_text_field($data['consumer_secret']),
-            'sync_from_date' => !empty($data['sync_from_date']) ? 
-                sanitize_text_field($data['sync_from_date']) : date('Y-m-d', strtotime('-30 days')),
+            'sync_from_date' => (!empty($data['sync_from_date']) && strtotime($data['sync_from_date'])) ? date('Y-m-d', strtotime($data['sync_from_date'])) : date('Y-m-d', strtotime('-30 days')),
             'auto_sync' => isset($data['auto_sync']) ? 1 : 0,
             'sync_interval' => intval($data['sync_interval'] ?? 60),
             'status' => 'active',

@@ -31,19 +31,24 @@ class FRF_WooCommerce_Sync {
         }
         
         // Prepare API parameters
+        $sync_date = !empty($store->sync_from_date) ? $store->sync_from_date : '-30 days';
         $params = array(
             'per_page' => $limit,
-            'orderby' => 'date',
-            'order' => 'desc',
-            'after' => date('c', strtotime($store->sync_from_date))
+            'orderby'  => 'date',
+            'order'    => 'desc',
         );
-        
-        // Get last synced order date
         $last_synced = $this->get_last_synced_date($store_id);
-        if ($last_synced) {
-            $params['after'] = date('c', strtotime($last_synced));
+        // Default: 30 days ago
+        $timestamp = time() - (30 * DAY_IN_SECONDS);
+        if (!empty($last_synced) && $last_synced !== '0000-00-00 00:00:00') {
+            $parsed = strtotime($last_synced);
+            if ($parsed !== false) {
+                $timestamp = $parsed;
+            }
         }
-        
+        // RFC3339 in UTC with timezone
+        $params['after'] = gmdate('Y-m-d\TH:i:s\Z', $timestamp);
+
         // Fetch orders from WooCommerce
         $orders = $this->store_model->api_request($store_id, 'orders', 'GET', $params);
         
