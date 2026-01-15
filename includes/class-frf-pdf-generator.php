@@ -1,8 +1,8 @@
 <?php
 /**
- * PDF Generator Class - FIXED VERSION
+ * PDF Generator Class - HTML ONLY VERSION
  * Path: includes/class-frf-pdf-generator.php
- * Generates PDF invoices using available libraries
+ * Generates printable HTML invoices
  */
 
 if (!defined('ABSPATH')) {
@@ -36,148 +36,27 @@ class FRF_PDF_Generator {
         $this->settings = FRF_Settings::get_instance();
         $this->business = $this->settings->get_business_info();
         
-        // Try different PDF generation methods in order of preference
-        if ($this->try_dompdf()) {
-            return true;
-        }
-        
-        if ($this->try_tcpdf()) {
-            return true;
-        }
-        
-        // Fallback: generate HTML and suggest browser print
-        return $this->generate_html_printable();
+        // Generate HTML and output
+        return $this->generate_html_pdf();
     }
     
     /**
-     * Try using DomPDF (WooCommerce includes this)
+     * Generate HTML PDF
      */
-    private function try_dompdf() {
-        // Check if DomPDF is available (WooCommerce PDF Invoices uses this)
-        $dompdf_paths = array(
-            WP_PLUGIN_DIR . '/woocommerce-pdf-invoices-packing-slips/lib/dompdf/autoload.inc.php',
-            WP_PLUGIN_DIR . '/woocommerce/packages/dompdf/autoload.inc.php',
-        );
-        
-        $dompdf_loaded = false;
-        foreach ($dompdf_paths as $path) {
-            if (file_exists($path)) {
-                require_once($path);
-                $dompdf_loaded = true;
-                break;
-            }
-        }
-        
-        if (!$dompdf_loaded || !class_exists('Dompdf\Dompdf')) {
-            return false;
-        }
-        
-        try {
-            $dompdf = new \Dompdf\Dompdf();
-            
-            // Configure DomPDF
-            $dompdf->set_option('isHtml5ParserEnabled', true);
-            $dompdf->set_option('isRemoteEnabled', true);
-            
-            // Get HTML content
-            $html = $this->get_complete_html();
-            
-            // Load HTML
-            $dompdf->loadHtml($html);
-            
-            // Set paper size
-            $dompdf->setPaper('A4', 'portrait');
-            
-            // Render PDF
-            $dompdf->render();
-            
-            // Output PDF
-            $filename = sanitize_file_name('fattura-' . $this->invoice->invoice_number . '.pdf');
-            $dompdf->stream($filename, array('Attachment' => 1));
-            
-            return true;
-            
-        } catch (Exception $e) {
-            error_log('FRF PDF Error (DomPDF): ' . $e->getMessage());
-            return false;
-        }
-    }
-    
-    /**
-     * Try using TCPDF
-     */
-    private function try_tcpdf() {
-        // Try to find and load TCPDF
-        $tcpdf_paths = array(
-            WP_PLUGIN_DIR . '/woocommerce-pdf-invoices-packing-slips/lib/tcpdf/tcpdf.php',
-            ABSPATH . 'wp-includes/class-phpmailer.php', // Different path
-        );
-        
-        $tcpdf_loaded = false;
-        foreach ($tcpdf_paths as $path) {
-            if (file_exists($path) && strpos($path, 'tcpdf.php') !== false) {
-                require_once($path);
-                $tcpdf_loaded = true;
-                break;
-            }
-        }
-        
-        if (!$tcpdf_loaded || !class_exists('TCPDF')) {
-            return false;
-        }
-        
-        try {
-            // Create new PDF document
-            $pdf = new TCPDF(PDF_PAGE_ORIENTATION, PDF_UNIT, PDF_PAGE_FORMAT, true, 'UTF-8', false);
-            
-            // Set document information
-            $pdf->SetCreator('Fatture RF');
-            $pdf->SetAuthor($this->business['business_name']);
-            $pdf->SetTitle('Fattura ' . $this->invoice->invoice_number);
-            
-            // Remove default header/footer
-            $pdf->setPrintHeader(false);
-            $pdf->setPrintFooter(false);
-            
-            // Set margins
-            $pdf->SetMargins(15, 15, 15);
-            $pdf->SetAutoPageBreak(true, 15);
-            
-            // Add a page
-            $pdf->AddPage();
-            
-            // Set font
-            $pdf->SetFont('helvetica', '', 10);
-            
-            // Get HTML content
-            $html = $this->get_pdf_content_html();
-            
-            // Output HTML
-            $pdf->writeHTML($html, true, false, true, false, '');
-            
-            // Output PDF
-            $filename = sanitize_file_name('fattura-' . $this->invoice->invoice_number . '.pdf');
-            $pdf->Output($filename, 'D');
-            
-            return true;
-            
-        } catch (Exception $e) {
-            error_log('FRF PDF Error (TCPDF): ' . $e->getMessage());
-            return false;
-        }
-    }
-    
-    /**
-     * Generate HTML printable version (fallback)
-     */
-    private function generate_html_printable() {
+    private function generate_html_pdf() {
         $html = $this->get_complete_html();
         
         // Set headers for HTML display with print dialog
         header('Content-Type: text/html; charset=utf-8');
         
         echo $html;
-        echo '<script>window.onload = function() { window.print(); }</script>';
+        echo '<script>
+            window.onload = function() { 
+                setTimeout(function() {
+                    window.print(); 
+                }, 500);
+            };
+        </script>';
         
         return true;
     }
@@ -198,7 +77,7 @@ class FRF_PDF_Generator {
         @page { margin: 2cm; size: A4; }
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { 
-            font-family: 'DejaVu Sans', Arial, sans-serif; 
+            font-family: Arial, Helvetica, sans-serif; 
             font-size: 11pt; 
             line-height: 1.5; 
             color: #333;
@@ -272,25 +151,12 @@ class FRF_PDF_Generator {
         @media print {
             body { print-color-adjust: exact; -webkit-print-color-adjust: exact; }
             .no-print { display: none; }
+            @page { margin: 1.5cm; }
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <?php echo $this->get_pdf_content_html(); ?>
-    </div>
-</body>
-</html>
-        <?php
-        return ob_get_clean();
-    }
-    
-    /**
-     * Get PDF content HTML (body only)
-     */
-    private function get_pdf_content_html() {
-        ob_start();
-        ?>
         <div class="header">
             <table>
                 <tr>
@@ -430,6 +296,9 @@ class FRF_PDF_Generator {
             <?php echo nl2br(esc_html($this->invoice->notes)); ?>
         </div>
         <?php endif; ?>
+    </div>
+</body>
+</html>
         <?php
         return ob_get_clean();
     }

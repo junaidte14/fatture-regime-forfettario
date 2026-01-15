@@ -52,7 +52,8 @@ class FRF_Invoice {
             'payment_terms' => sanitize_text_field($data['payment_terms'] ?? ''),
             'payment_method' => sanitize_text_field($data['payment_method'] ?? ''),
             'notes' => sanitize_textarea_field($data['notes'] ?? ''),
-            'status' => sanitize_text_field($data['status'] ?? 'draft')
+            'status' => sanitize_text_field($data['status'] ?? 'draft'),
+            'woo_order_id' => intval($data['woo_order_id'])
         );
         
         $result = $wpdb->insert($this->table_name, $invoice_data);
@@ -193,14 +194,38 @@ class FRF_Invoice {
     }
     
     /**
-     * Delete invoice
+     * Delete invoice - FIXED VERSION
      */
     public function delete($invoice_id) {
         global $wpdb;
         
         $invoice_id = intval($invoice_id);
         
-        return $wpdb->delete($this->table_name, array('id' => $invoice_id));
+        // Get invoice details before deletion
+        $invoice = $this->get($invoice_id);
+        
+        if (!$invoice) {
+            return false;
+        }
+        
+        // If this invoice was created from a WooCommerce order, clear the reference
+        if (!empty($invoice->woo_order_id)) {
+            $woo_orders_table = $wpdb->prefix . 'frf_woo_orders';
+            
+            // Clear the invoice_id from the WooCommerce order
+            $wpdb->update(
+                $woo_orders_table,
+                array('invoice_id' => null),
+                array('id' => intval($invoice->woo_order_id)),
+                array('%d'),
+                array('%d')
+            );
+        }
+        
+        // Delete the invoice (items and history will be deleted via CASCADE)
+        $result = $wpdb->delete($this->table_name, array('id' => $invoice_id));
+        
+        return $result !== false;
     }
     
     /**

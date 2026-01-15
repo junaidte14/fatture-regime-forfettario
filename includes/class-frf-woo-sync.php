@@ -599,7 +599,7 @@ class FRF_WooCommerce_Sync {
     }
     
     /**
-     * Create invoice from WooCommerce order - COMPLETE FIX WITH DISCOUNT & BOLLO
+     * Create invoice from WooCommerce order - FIXED DISCOUNT LOGIC
      */
     public function create_invoice_from_order($order_id) {
         global $wpdb;
@@ -647,17 +647,42 @@ class FRF_WooCommerce_Sync {
         // Extract marca da bollo information
         $bollo_info = isset($raw_data['bollo']) ? $raw_data['bollo'] : $this->extract_bollo_info($woo_order);
         $bollo_applied = $bollo_info['applied'] ?? false;
-        $bollo_amount = floatval($bollo_info['amount'] ?? 0);
+        $bollo_amount_original = floatval($bollo_info['amount'] ?? 0);
         
-        // Calculate correct amounts
-        // WooCommerce stores subtotal before discount
-        $items_subtotal = 0;
+        // Calculate items subtotal (before discount)
+        $items_subtotal_before_discount = 0;
         foreach ($order->items_data as $item) {
-            $items_subtotal += floatval($item['subtotal']);
+            $items_subtotal_before_discount += floatval($item['subtotal']);
         }
         
-        // Actual invoice subtotal after discount
-        $invoice_subtotal = $items_subtotal - $discount_total;
+        // If discount is 100%, both items and bollo should be free
+        $has_full_discount = false;
+        $coupon_info = $this->extract_coupon_info($woo_order);
+        if (!empty($coupon_info['type']) && $coupon_info['type'] === 'percent' && $coupon_info['amount'] == 100) {
+            $has_full_discount = true;
+        }
+        
+        // Calculate actual amounts after discount
+        if ($has_full_discount) {
+            // 100% discount - everything is free
+            $items_subtotal_after_discount = 0;
+            $bollo_amount_after_discount = 0;
+            $invoice_subtotal = 0;
+        } else {
+            // Partial or no discount
+            $items_subtotal_after_discount = $items_subtotal_before_discount - $discount_total;
+            
+            // Apply discount proportionally to bollo if discount exists
+            if ($discount_total > 0 && $items_subtotal_before_discount > 0) {
+                $discount_percentage = ($discount_total / $items_subtotal_before_discount);
+                $bollo_discount = $bollo_amount_original * $discount_percentage;
+                $bollo_amount_after_discount = $bollo_amount_original - $bollo_discount;
+            } else {
+                $bollo_amount_after_discount = $bollo_amount_original;
+            }
+            
+            $invoice_subtotal = $items_subtotal_after_discount;
+        }
         
         // Tax calculation
         $tax_amount = floatval($order->tax);
@@ -666,37 +691,27 @@ class FRF_WooCommerce_Sync {
         // Total before bollo
         $total_before_bollo = $invoice_subtotal + $tax_amount;
         
-        // Final total including bollo
-        $final_total = $total_before_bollo + $bollo_amount;
+        // Final total including bollo (after discount)
+        $final_total = $total_before_bollo + $bollo_amount_after_discount;
         
         // Prepare invoice items
         $items = array();
         
-        // Add product items
+        // Add product items with prices BEFORE discount (will show original prices)
         foreach ($order->items_data as $item) {
-            $item_subtotal = floatval($item['subtotal']);
+            $item_subtotal_before = floatval($item['subtotal']);
             $item_quantity = floatval($item['quantity']);
-            
-            // Calculate unit price with discount applied proportionally
-            if ($discount_total > 0 && $items_subtotal > 0) {
-                $discount_ratio = ($item_subtotal / $items_subtotal);
-                $item_discount = $discount_total * $discount_ratio;
-                $item_total = $item_subtotal - $item_discount;
-            } else {
-                $item_total = $item_subtotal;
-            }
             
             $items[] = array(
                 'description' => $item['name'],
                 'quantity' => $item_quantity,
-                'unit_price' => $item_quantity > 0 ? $item_total / $item_quantity : 0,
-                'total' => $item_total
+                'unit_price' => $item_quantity > 0 ? $item_subtotal_before / $item_quantity : 0,
+                'total' => $item_subtotal_before
             );
         }
         
         // Add discount as a negative line item if present
         if ($discount_total > 0) {
-            $coupon_info = $this->extract_coupon_info($woo_order);
             $discount_description = 'Sconto';
             if (!empty($coupon_info['code'])) {
                 $discount_description .= ' (Coupon: ' . $coupon_info['code'];
@@ -716,14 +731,25 @@ class FRF_WooCommerce_Sync {
             );
         }
         
-        // Add marca da bollo as separate line item if applied
-        if ($bollo_applied && $bollo_amount > 0) {
+        // Add marca da bollo BEFORE discount (if applied)
+        if ($bollo_applied && $bollo_amount_original > 0) {
             $items[] = array(
                 'description' => 'Marca da Bollo (Imposta di bollo)',
                 'quantity' => 1,
-                'unit_price' => $bollo_amount,
-                'total' => $bollo_amount
+                'unit_price' => $bollo_amount_original,
+                'total' => $bollo_amount_original
             );
+            
+            // If there was a discount applied to bollo, show it
+            if ($discount_total > 0 && $bollo_amount_after_discount < $bollo_amount_original) {
+                $bollo_discount_amount = $bollo_amount_original - $bollo_amount_after_discount;
+                $items[] = array(
+                    'description' => 'Sconto su Marca da Bollo',
+                    'quantity' => 1,
+                    'unit_price' => -$bollo_discount_amount,
+                    'total' => -$bollo_discount_amount
+                );
+            }
         }
         
         // Get settings for defaults
@@ -742,7 +768,7 @@ class FRF_WooCommerce_Sync {
             $notes_parts[] = $default_notes;
         }
         
-        // Add WooCommerce order reference
+        // Add WooCommerce order reference with ORDER DATE
         $notes_parts[] = sprintf(
             'Riferimento ordine WooCommerce #%s del %s',
             $order->order_number,
@@ -752,17 +778,19 @@ class FRF_WooCommerce_Sync {
         // Add discount information if present
         if ($discount_total > 0 && !empty($coupon_info)) {
             $notes_parts[] = sprintf(
-                'Sconto applicato: €%.2f (Coupon: %s)',
+                'Sconto applicato: €%.2f%s (Coupon: %s)',
                 $discount_total,
+                $has_full_discount ? ' + sconto su bollo €' . number_format($bollo_amount_original - $bollo_amount_after_discount, 2) : '',
                 $coupon_info['code']
             );
         }
         
         // Add marca da bollo note if applied
-        if ($bollo_applied && $bollo_amount > 0) {
+        if ($bollo_applied && $bollo_amount_original > 0) {
             $notes_parts[] = sprintf(
-                'Marca da bollo applicata: €%.2f (ai sensi dell\'art. 13, comma 1 della Tariffa allegata al DPR n. 642/1972)',
-                $bollo_amount
+                'Marca da bollo: €%.2f%s (ai sensi dell\'art. 13, comma 1 della Tariffa allegata al DPR n. 642/1972)',
+                $bollo_amount_original,
+                $bollo_amount_after_discount < $bollo_amount_original ? ' (dopo sconto: €' . number_format($bollo_amount_after_discount, 2) . ')' : ''
             );
         }
         
@@ -779,10 +807,10 @@ class FRF_WooCommerce_Sync {
             );
         }
         
-        // Prepare invoice data
+        // Prepare invoice data - USE ORDER DATE instead of current date
         $invoice_data = array(
             'invoice_number' => $invoice_number,
-            'invoice_date' => date('Y-m-d'),
+            'invoice_date' => date('Y-m-d', strtotime($order->order_date)), // USE ORDER DATE
             'client_id' => $client_id,
             'subtotal' => $invoice_subtotal,
             'tax_rate' => round($tax_rate, 2),
@@ -796,7 +824,7 @@ class FRF_WooCommerce_Sync {
             'notes' => implode("\n\n", $notes_parts),
             'status' => 'draft',
             'items' => $items,
-            'woo_order_id' => $order->id
+            'woo_order_id' => $order_id
         );
         
         // Create invoice

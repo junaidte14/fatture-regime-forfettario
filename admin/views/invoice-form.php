@@ -1,6 +1,6 @@
 <?php
 /**
- * Invoice Form View Template (Add/Edit)
+ * Invoice Form View Template (Add/Edit) - COMPLETE FIXED VERSION
  * Path: admin/views/invoice-form.php
  */
 
@@ -17,6 +17,18 @@ $default_payment_method = $settings->get('default_payment_method', 'Bonifico ban
 $apply_withholding = $settings->get('apply_withholding_tax', false);
 $withholding_rate = $settings->get('withholding_tax_rate', 20);
 $exempt_vat = $settings->get('exempt_vat', true);
+
+// Convert items objects to arrays for easier handling
+$items = [];
+if ($is_edit && !empty($invoice->items)) {
+    foreach ($invoice->items as $item) {
+        // Convert object to array
+        $items[] = (array) $item;
+    }
+} else {
+    // Default item for new invoices
+    $items = [['description' => '', 'quantity' => 1, 'unit_price' => 0, 'total' => 0]];
+}
 ?>
 
 <div class="wrap">
@@ -99,10 +111,7 @@ $exempt_vat = $settings->get('exempt_vat', true);
                                 </tr>
                             </thead>
                             <tbody>
-                                <?php 
-                                $items = $invoice->items ?? [['description' => '', 'quantity' => 1, 'unit_price' => 0, 'total' => 0]];
-                                foreach ($items as $index => $item): 
-                                ?>
+                                <?php foreach ($items as $index => $item): ?>
                                 <tr>
                                     <td>
                                         <textarea name="items[<?php echo $index; ?>][description]" 
@@ -115,7 +124,7 @@ $exempt_vat = $settings->get('exempt_vat', true);
                                     </td>
                                     <td>
                                         <input type="number" name="items[<?php echo $index; ?>][unit_price]" 
-                                               class="item-unit-price" step="0.01" min="0" 
+                                               class="item-unit-price" step="0.01" 
                                                value="<?php echo esc_attr($item['unit_price'] ?? 0); ?>" required>
                                     </td>
                                     <td>
@@ -306,14 +315,14 @@ $exempt_vat = $settings->get('exempt_vat', true);
             <input type="number" name="items[INDEX][quantity]" class="item-quantity" step="0.01" min="0" value="1" required>
         </td>
         <td>
-            <input type="number" name="items[INDEX][unit_price]" class="item-unit-price" step="0.01" min="0" value="0" required>
+            <input type="number" name="items[INDEX][unit_price]" class="item-unit-price" step="0.01" value="0" required>
         </td>
         <td>
             <input type="number" name="items[INDEX][total]" class="item-total" step="0.01" readonly value="0">
         </td>
         <td>
             <span class="dashicons dashicons-trash item-remove frf-remove-item" 
-                  style="cursor: pointer; color: #d63638;" title="<?php _e('Rimuovi', 'fatture-rf'); ?>"></span>
+                  style="cursor: pointer; color: #d63638;" title="<?php _e('Remove', 'fatture-rf'); ?>"></span>
         </td>
     </tr>
 </script>
