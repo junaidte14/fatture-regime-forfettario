@@ -10,6 +10,12 @@ if (!defined('ABSPATH')) {
 
 $settings = FRF_Settings::get_instance();
 $business_info = $settings->get_business_info();
+
+$nf = new NumberFormatter('it_IT', NumberFormatter::DECIMAL);
+$nf->setAttribute(NumberFormatter::FRACTION_DIGITS, 0);
+$cf = new NumberFormatter('it_IT', NumberFormatter::CURRENCY);
+$pf  = new NumberFormatter('it_IT', NumberFormatter::PERCENT);
+$pf->setAttribute(NumberFormatter::FRACTION_DIGITS, 0);
 ?>
 
 <div class="wrap">
@@ -34,17 +40,23 @@ $business_info = $settings->get_business_info();
         <!-- Total Invoices -->
         <div class="frf-stat-card">
             <h3><?php _e('Total Invoices', 'fatture-rf'); ?></h3>
-            <p class="frf-stat-value"><?php echo number_format($stats->total_invoices, 0, ',', '.'); ?></p>
+            <p class="frf-stat-value">
+                <?php echo $nf->format($stats->total_invoices ?? 0); ?>
+            </p>
             <p class="frf-stat-label">
-                <?php echo number_format($stats->paid_invoices, 0, ',', '.'); ?> <?php _e('paid', 'fatture-rf'); ?> | 
-                <?php echo number_format($stats->sent_invoices, 0, ',', '.'); ?> <?php _e('sent', 'fatture-rf'); ?>
+                <?php echo $nf->format($stats->paid_invoices ?? 0); ?> <?php _e('paid', 'fatture-rf'); ?> | 
+                <?php echo $nf->format($stats->sent_invoices ?? 0); ?> <?php _e('sent', 'fatture-rf'); ?>
             </p>
         </div>
         
         <!-- Total Amount -->
         <div class="frf-stat-card">
             <h3><?php _e('Total Revenue', 'fatture-rf'); ?></h3>
-            <p class="frf-stat-value">€ <?php echo number_format($stats->total_amount, 2, ',', '.'); ?></p>
+            <p class="frf-stat-value">
+                <?php
+                    echo $cf->formatCurrency($stats->total_amount ?? 0, 'EUR'); 
+                ?>
+            </p>
             <p class="frf-stat-label"><?php _e('Total amount issued', 'fatture-rf'); ?></p>
         </div>
         
@@ -52,13 +64,18 @@ $business_info = $settings->get_business_info();
         <div class="frf-stat-card">
             <h3><?php _e('Received', 'fatture-rf'); ?></h3>
             <p class="frf-stat-value" style="color: #0a7d3e;">
-                € <?php echo number_format($stats->paid_amount, 2, ',', '.'); ?>
+                <?php 
+                    // Formats to € 1.234,56 and handles nulls
+                    echo $cf->formatCurrency($stats->paid_amount ?? 0, 'EUR'); 
+                ?>
             </p>
             <p class="frf-stat-label">
                 <?php 
-                $percentage = $stats->total_amount > 0 ? ($stats->paid_amount / $stats->total_amount) * 100 : 0;
-                echo number_format($percentage, 0) . '%'; 
-                ?> <?php _e('of total', 'fatture-rf'); ?>
+                    // Logic for the percentage calculation
+                    $ratio = $stats->total_amount > 0 ? ($stats->paid_amount / $stats->total_amount) : 0;
+                    echo $pf->format($ratio); 
+                ?> 
+                <?php _e('of total', 'fatture-rf'); ?>
             </p>
         </div>
         
@@ -66,7 +83,9 @@ $business_info = $settings->get_business_info();
         <div class="frf-stat-card">
             <h3><?php _e('Outstanding', 'fatture-rf'); ?></h3>
             <p class="frf-stat-value" style="color: #d63638;">
-                € <?php echo number_format($stats->outstanding_amount, 2, ',', '.'); ?>
+                <?php 
+                    echo $cf->formatCurrency($stats->outstanding_amount ?? 0, 'EUR'); 
+                ?>
             </p>
             <p class="frf-stat-label"><?php _e('Unpaid invoices', 'fatture-rf'); ?></p>
         </div>
@@ -74,7 +93,11 @@ $business_info = $settings->get_business_info();
         <!-- Total Clients -->
         <div class="frf-stat-card">
             <h3><?php _e('Clients', 'fatture-rf'); ?></h3>
-            <p class="frf-stat-value"><?php echo number_format($total_clients, 0, ',', '.'); ?></p>
+            <p class="frf-stat-value">
+                <?php 
+                    echo $nf->format($total_clients ?? 0); 
+                ?>
+            </p>
             <p class="frf-stat-label">
                 <a href="<?php echo admin_url('admin.php?page=fatture-rf-clients'); ?>">
                     <?php _e('View all', 'fatture-rf'); ?>
@@ -85,7 +108,11 @@ $business_info = $settings->get_business_info();
         <!-- Draft Invoices -->
         <div class="frf-stat-card">
             <h3><?php _e('Draft', 'fatture-rf'); ?></h3>
-            <p class="frf-stat-value"><?php echo number_format($stats->draft_invoices, 0, ',', '.'); ?></p>
+            <p class="frf-stat-value">
+                <?php 
+                    echo $nf->format($stats->draft_invoices ?? 0); 
+                ?>
+            </p>
             <p class="frf-stat-label">
                 <a href="<?php echo admin_url('admin.php?page=fatture-rf-invoices&status=draft'); ?>">
                     <?php _e('View drafts', 'fatture-rf'); ?>

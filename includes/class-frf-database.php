@@ -35,11 +35,14 @@ class FRF_Database {
             country varchar(2) DEFAULT 'IT',
             client_type enum('IT','EU','NON_EU') DEFAULT 'IT',
             sdi_code varchar(7) DEFAULT NULL,
+            woo_store_id bigint(20) DEFAULT NULL,
+            woo_customer_id bigint(20) DEFAULT NULL,
             created_at datetime DEFAULT CURRENT_TIMESTAMP,
             updated_at datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
             PRIMARY KEY (id),
             KEY client_type (client_type),
-            KEY vat_number (vat_number)
+            KEY vat_number (vat_number),
+            KEY woo_store_id (woo_store_id)
         ) $charset_collate;";
         
         // Invoices table
@@ -64,6 +67,7 @@ class FRF_Database {
             submission_date datetime DEFAULT NULL,
             sdi_identifier varchar(50) DEFAULT NULL,
             xml_file_path varchar(255) DEFAULT NULL,
+            woo_order_id bigint(20) DEFAULT NULL,
             created_at datetime DEFAULT CURRENT_TIMESTAMP,
             updated_at datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
             PRIMARY KEY (id),
@@ -71,6 +75,7 @@ class FRF_Database {
             KEY client_id (client_id),
             KEY invoice_date (invoice_date),
             KEY status (status),
+            KEY woo_order_id (woo_order_id),
             CONSTRAINT fk_client FOREIGN KEY (client_id) REFERENCES $table_clients(id) ON DELETE RESTRICT
         ) $charset_collate;";
         
@@ -168,23 +173,41 @@ class FRF_Database {
         dbDelta($sql_stores);
         dbDelta($sql_woo_orders);
 
-        // Add WooCommerce fields to clients table
-        $wpdb->query("ALTER TABLE {$table_clients} 
-            ADD COLUMN IF NOT EXISTS woo_store_id bigint(20) DEFAULT NULL AFTER sdi_code,
-            ADD COLUMN IF NOT EXISTS woo_customer_id bigint(20) DEFAULT NULL AFTER woo_store_id,
-            ADD INDEX IF NOT EXISTS woo_store_id (woo_store_id)
-        ");
+        // Add WooCommerce fields to existing tables (if they don't exist)
+        // Check and add columns to clients table
+        $clients_columns = $wpdb->get_col("DESCRIBE {$table_clients}", 0);
+        
+        if (!in_array('woo_store_id', $clients_columns)) {
+            $wpdb->query("ALTER TABLE {$table_clients} ADD COLUMN woo_store_id bigint(20) DEFAULT NULL AFTER sdi_code");
+        }
+        
+        if (!in_array('woo_customer_id', $clients_columns)) {
+            $wpdb->query("ALTER TABLE {$table_clients} ADD COLUMN woo_customer_id bigint(20) DEFAULT NULL AFTER woo_store_id");
+        }
+        
+        // Check if index exists before creating it
+        $clients_indexes = $wpdb->get_results("SHOW INDEX FROM {$table_clients} WHERE Key_name = 'woo_store_id'");
+        if (empty($clients_indexes)) {
+            $wpdb->query("ALTER TABLE {$table_clients} ADD INDEX woo_store_id (woo_store_id)");
+        }
 
-        // Add WooCommerce field to invoices table  
-        $wpdb->query("ALTER TABLE {$table_invoices} 
-            ADD COLUMN IF NOT EXISTS woo_order_id bigint(20) DEFAULT NULL AFTER xml_file_path,
-            ADD INDEX IF NOT EXISTS woo_order_id (woo_order_id)
-        ");
+        // Check and add column to invoices table  
+        $invoices_columns = $wpdb->get_col("DESCRIBE {$table_invoices}", 0);
+        
+        if (!in_array('woo_order_id', $invoices_columns)) {
+            $wpdb->query("ALTER TABLE {$table_invoices} ADD COLUMN woo_order_id bigint(20) DEFAULT NULL AFTER xml_file_path");
+        }
+        
+        // Check if index exists before creating it
+        $invoices_indexes = $wpdb->get_results("SHOW INDEX FROM {$table_invoices} WHERE Key_name = 'woo_order_id'");
+        if (empty($invoices_indexes)) {
+            $wpdb->query("ALTER TABLE {$table_invoices} ADD INDEX woo_order_id (woo_order_id)");
+        }
         
         // Save database version
         update_option('frf_db_version', FRF_VERSION);
     }
-    
+
     /**
      * Get table name with prefix
      */

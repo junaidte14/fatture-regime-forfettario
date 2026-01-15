@@ -160,7 +160,7 @@ class FRF_WooCommerce_Sync {
     }
     
     /**
-     * Extract customer data from WooCommerce order - ENHANCED VERSION
+     * Extract customer data from WooCommerce order - FIXED VERSION
      */
     private function extract_customer_data($order) {
         $billing = $order['billing'];
@@ -168,23 +168,38 @@ class FRF_WooCommerce_Sync {
         
         // Extract Italian fiscal fields from meta_data
         $meta_data = isset($order['meta_data']) ? $order['meta_data'] : array();
-        $codice_fiscale = $this->get_meta_value($meta_data, 'billing_codice_fiscale');
-        $partita_iva = $this->get_meta_value($meta_data, 'billing_partita_iva');
-        $sdi = $this->get_meta_value($meta_data, 'billing_sdi');
-        $pec = $this->get_meta_value($meta_data, 'billing_pec');
+        $codice_fiscale = $this->get_meta_value($meta_data, '_billing_codice_fiscale');
+        $partita_iva = $this->get_meta_value($meta_data, '_billing_partita_iva');
+        $sdi = $this->get_meta_value($meta_data, '_billing_sdi');
+        $pec = $this->get_meta_value($meta_data, '_billing_pec');
         
         // Alternative meta key names (some plugins use different keys)
         if (empty($codice_fiscale)) {
             $codice_fiscale = $this->get_meta_value($meta_data, '_billing_cf');
         }
+        if (empty($codice_fiscale)) {
+            $codice_fiscale = $this->get_meta_value($meta_data, 'billing_codice_fiscale');
+        }
+        
         if (empty($partita_iva)) {
             $partita_iva = $this->get_meta_value($meta_data, '_billing_vat_number');
         }
+        if (empty($partita_iva)) {
+            $partita_iva = $this->get_meta_value($meta_data, 'billing_partita_iva');
+        }
+        
         if (empty($sdi)) {
             $sdi = $this->get_meta_value($meta_data, '_billing_codice_sdi');
         }
+        if (empty($sdi)) {
+            $sdi = $this->get_meta_value($meta_data, 'billing_sdi');
+        }
+        
         if (empty($pec)) {
             $pec = $this->get_meta_value($meta_data, '_billing_pec_email');
+        }
+        if (empty($pec)) {
+            $pec = $this->get_meta_value($meta_data, 'billing_pec');
         }
         
         return array(
@@ -253,6 +268,45 @@ class FRF_WooCommerce_Sync {
         }
         return '';
     }
+
+    /**
+     * Extract coupon information from WooCommerce order
+     */
+    private function extract_coupon_info($woo_order) {
+        $coupon_info = array(
+            'code' => '',
+            'type' => '',
+            'amount' => 0
+        );
+        
+        if (isset($woo_order['coupon_lines']) && !empty($woo_order['coupon_lines'])) {
+            $coupon = $woo_order['coupon_lines'][0];
+            $coupon_info['code'] = $coupon['code'] ?? '';
+            $coupon_info['discount'] = floatval($coupon['discount'] ?? 0);
+            
+            // Try to extract discount type and amount from metadata
+            if (isset($coupon['meta_data'])) {
+                foreach ($coupon['meta_data'] as $meta) {
+                    if ($meta['key'] === 'coupon_info' && !empty($meta['value'])) {
+                        // Value is like: [10532,"codoplex","percent",100]
+                        $info = json_decode($meta['value'], true);
+                        if (is_array($info) && count($info) >= 4) {
+                            $coupon_info['type'] = $info[2];
+                            $coupon_info['amount'] = $info[3];
+                        }
+                    }
+                }
+            }
+            
+            // Fallback to discount_type if available
+            if (empty($coupon_info['type']) && isset($coupon['discount_type'])) {
+                $coupon_info['type'] = $coupon['discount_type'];
+                $coupon_info['amount'] = $coupon['nominal_amount'] ?? 0;
+            }
+        }
+        
+        return $coupon_info;
+    }
     
     /**
      * Extract marca da bollo information from order - NEW METHOD
@@ -263,16 +317,12 @@ class FRF_WooCommerce_Sync {
             'amount' => 0
         );
         
-        // Check fees for marca da bollo
         if (isset($order_data['fee_lines']) && is_array($order_data['fee_lines'])) {
             foreach ($order_data['fee_lines'] as $fee) {
                 $fee_name = isset($fee['name']) ? strtolower($fee['name']) : '';
-                
-                // Check if this is a marca da bollo fee
                 if (strpos($fee_name, 'bollo') !== false || 
                     strpos($fee_name, 'imposta di bollo') !== false ||
                     strpos($fee_name, 'stamp') !== false) {
-                    
                     $bollo_info['applied'] = true;
                     $bollo_info['amount'] = abs(floatval($fee['total']));
                     break;
@@ -280,10 +330,9 @@ class FRF_WooCommerce_Sync {
             }
         }
         
-        // Also check meta data
         if (!$bollo_info['applied'] && isset($order_data['meta_data'])) {
-            $meta_bollo_applied = $this->get_meta_value($order_data['meta_data'], '_forfettario_bollo_applied');
-            $meta_bollo_amount = $this->get_meta_value($order_data['meta_data'], '_forfettario_bollo_amount');
+            $meta_bollo_applied = $this->get_meta_value($order_data['meta_data'], '_forfettario_marca_bollo_applied');
+            $meta_bollo_amount = $this->get_meta_value($order_data['meta_data'], '_forfettario_marca_bollo_amount');
             
             if ($meta_bollo_applied === 'yes' || $meta_bollo_applied === true) {
                 $bollo_info['applied'] = true;
@@ -393,7 +442,7 @@ class FRF_WooCommerce_Sync {
     }
     
     /**
-     * Get or create client from order
+     * Get or create client from order - ENHANCED VERSION
      */
     public function get_or_create_client($order_id) {
         $order = $this->get_order($order_id);
@@ -404,6 +453,35 @@ class FRF_WooCommerce_Sync {
         
         $client_model = new FRF_Client();
         $customer = $order->customer_data;
+        
+        // IMPORTANT: If customer_data is a JSON string, decode it
+        if (is_string($customer)) {
+            $customer = json_decode($customer, true);
+        }
+        
+        // Try to get fiscal data from raw_data if not present in customer_data
+        if ((empty($customer['codice_fiscale']) && empty($customer['partita_iva'])) && !empty($order->raw_data)) {
+            $raw_data = is_string($order->raw_data) ? json_decode($order->raw_data, true) : $order->raw_data;
+            
+            if (isset($raw_data['fiscal_data'])) {
+                $fiscal_data = $raw_data['fiscal_data'];
+                
+                if (!empty($fiscal_data['codice_fiscale'])) {
+                    $customer['codice_fiscale'] = $fiscal_data['codice_fiscale'];
+                    $customer['tax_code'] = $fiscal_data['codice_fiscale'];
+                }
+                if (!empty($fiscal_data['partita_iva'])) {
+                    $customer['partita_iva'] = $fiscal_data['partita_iva'];
+                    $customer['vat_number'] = $fiscal_data['partita_iva'];
+                }
+                if (!empty($fiscal_data['sdi'])) {
+                    $customer['sdi'] = $fiscal_data['sdi'];
+                }
+                if (!empty($fiscal_data['pec'])) {
+                    $customer['pec'] = $fiscal_data['pec'];
+                }
+            }
+        }
         
         // Check if client already exists by email or VAT
         global $wpdb;
@@ -446,28 +524,82 @@ class FRF_WooCommerce_Sync {
             $customer['company'] : 
             trim($customer['first_name'] . ' ' . $customer['last_name']);
         
+        // Ensure we have the fiscal data from the correct source
+        $partita_iva = '';
+        $codice_fiscale = '';
+        $sdi = '';
+        $pec = '';
+        
+        // First check the direct customer data fields
+        if (!empty($customer['partita_iva'])) {
+            $partita_iva = $customer['partita_iva'];
+        }
+        if (!empty($customer['codice_fiscale'])) {
+            $codice_fiscale = $customer['codice_fiscale'];
+        }
+        if (!empty($customer['sdi'])) {
+            $sdi = $customer['sdi'];
+        }
+        if (!empty($customer['pec'])) {
+            $pec = $customer['pec'];
+        }
+        
+        // If still empty, try legacy fields
+        if (empty($partita_iva) && !empty($customer['vat_number'])) {
+            $partita_iva = $customer['vat_number'];
+        }
+        if (empty($codice_fiscale) && !empty($customer['tax_code'])) {
+            $codice_fiscale = $customer['tax_code'];
+        }
+        
+        // Determine country and client type
+        $country = $billing['country'] ?? 'IT';
+        
+        // Debug logging
+        error_log('FRF DEBUG: Creating client with data: ' . print_r(array(
+            'business_name' => $business_name,
+            'vat_number' => $partita_iva,
+            'tax_code' => $codice_fiscale,
+            'country' => $country,
+        ), true));
+        error_log('FRF DEBUG: Original customer data: ' . print_r($customer, true));
+        
+        // For Italian B2C customers (individuals), codice_fiscale is required and sufficient
+        // For Italian B2B customers (companies), partita_iva is required
+        if ($country === 'IT' && empty($partita_iva) && empty($codice_fiscale)) {
+            return new WP_Error('missing_fiscal_data', 
+                __('Cliente italiano senza Partita IVA o Codice Fiscale. Impossibile creare il cliente.', 'fatture-rf'));
+        }
+        
         $client_data = array(
             'business_name' => $business_name,
-            'vat_number' => $customer['partita_iva'] ?? '',
-            'tax_code' => $customer['codice_fiscale'] ?? '',
+            'vat_number' => $partita_iva,
+            'tax_code' => $codice_fiscale,
             'email' => $customer['email'] ?? '',
             'phone' => $customer['phone'] ?? '',
             'address' => trim(($billing['address_1'] ?? '') . ' ' . ($billing['address_2'] ?? '')),
             'city' => $billing['city'] ?? '',
             'province' => $billing['state'] ?? '',
             'postal_code' => $billing['postcode'] ?? '',
-            'country' => $billing['country'] ?? 'IT',
-            'sdi_code' => $customer['sdi'] ?? '',
-            'pec_email' => $customer['pec'] ?? '',
+            'country' => $country,
+            'sdi_code' => $sdi,
+            'pec_email' => $pec,
             'woo_store_id' => $order->store_id,
             'woo_customer_id' => $order->woo_order_id
         );
         
-        return $client_model->create($client_data);
+        $result = $client_model->create($client_data);
+        
+        if (is_wp_error($result)) {
+            error_log('FRF ERROR: Failed to create client from WooCommerce order #' . $order->order_number . ': ' . $result->get_error_message());
+            error_log('FRF ERROR: Client data was: ' . print_r($client_data, true));
+        }
+        
+        return $result;
     }
     
     /**
-     * Create invoice from WooCommerce order - FIXED VERSION
+     * Create invoice from WooCommerce order - COMPLETE FIX WITH DISCOUNT & BOLLO
      */
     public function create_invoice_from_order($order_id) {
         global $wpdb;
@@ -482,7 +614,6 @@ class FRF_WooCommerce_Sync {
             $invoice_model = new FRF_Invoice();
             $existing_invoice = $invoice_model->get($order->invoice_id);
             
-            // If invoice exists and is valid, return error
             if ($existing_invoice) {
                 return new WP_Error('invoice_exists', 
                     __('Fattura già creata per questo ordine', 'fatture-rf'));
@@ -506,14 +637,92 @@ class FRF_WooCommerce_Sync {
             return $client_id;
         }
         
+        // Parse raw data to get detailed order information
+        $raw_data = is_string($order->raw_data) ? json_decode($order->raw_data, true) : $order->raw_data;
+        $woo_order = isset($raw_data['order']) ? $raw_data['order'] : array();
+        
+        // Extract discount information
+        $discount_total = floatval($woo_order['discount_total'] ?? 0);
+        
+        // Extract marca da bollo information
+        $bollo_info = isset($raw_data['bollo']) ? $raw_data['bollo'] : $this->extract_bollo_info($woo_order);
+        $bollo_applied = $bollo_info['applied'] ?? false;
+        $bollo_amount = floatval($bollo_info['amount'] ?? 0);
+        
+        // Calculate correct amounts
+        // WooCommerce stores subtotal before discount
+        $items_subtotal = 0;
+        foreach ($order->items_data as $item) {
+            $items_subtotal += floatval($item['subtotal']);
+        }
+        
+        // Actual invoice subtotal after discount
+        $invoice_subtotal = $items_subtotal - $discount_total;
+        
+        // Tax calculation
+        $tax_amount = floatval($order->tax);
+        $tax_rate = $invoice_subtotal > 0 ? ($tax_amount / $invoice_subtotal) * 100 : 0;
+        
+        // Total before bollo
+        $total_before_bollo = $invoice_subtotal + $tax_amount;
+        
+        // Final total including bollo
+        $final_total = $total_before_bollo + $bollo_amount;
+        
         // Prepare invoice items
         $items = array();
+        
+        // Add product items
         foreach ($order->items_data as $item) {
+            $item_subtotal = floatval($item['subtotal']);
+            $item_quantity = floatval($item['quantity']);
+            
+            // Calculate unit price with discount applied proportionally
+            if ($discount_total > 0 && $items_subtotal > 0) {
+                $discount_ratio = ($item_subtotal / $items_subtotal);
+                $item_discount = $discount_total * $discount_ratio;
+                $item_total = $item_subtotal - $item_discount;
+            } else {
+                $item_total = $item_subtotal;
+            }
+            
             $items[] = array(
                 'description' => $item['name'],
-                'quantity' => $item['quantity'],
-                'unit_price' => $item['subtotal'] / $item['quantity'],
-                'total' => $item['total']
+                'quantity' => $item_quantity,
+                'unit_price' => $item_quantity > 0 ? $item_total / $item_quantity : 0,
+                'total' => $item_total
+            );
+        }
+        
+        // Add discount as a negative line item if present
+        if ($discount_total > 0) {
+            $coupon_info = $this->extract_coupon_info($woo_order);
+            $discount_description = 'Sconto';
+            if (!empty($coupon_info['code'])) {
+                $discount_description .= ' (Coupon: ' . $coupon_info['code'];
+                if (!empty($coupon_info['type'])) {
+                    if ($coupon_info['type'] === 'percent') {
+                        $discount_description .= ' - ' . $coupon_info['amount'] . '%';
+                    }
+                }
+                $discount_description .= ')';
+            }
+            
+            $items[] = array(
+                'description' => $discount_description,
+                'quantity' => 1,
+                'unit_price' => -$discount_total,
+                'total' => -$discount_total
+            );
+        }
+        
+        // Add marca da bollo as separate line item if applied
+        if ($bollo_applied && $bollo_amount > 0) {
+            $items[] = array(
+                'description' => 'Marca da Bollo (Imposta di bollo)',
+                'quantity' => 1,
+                'unit_price' => $bollo_amount,
+                'total' => $bollo_amount
             );
         }
         
@@ -524,21 +733,67 @@ class FRF_WooCommerce_Sync {
         $invoice_model = new FRF_Invoice();
         $invoice_number = $invoice_model->generate_invoice_number();
         
+        // Build notes with all relevant information
+        $notes_parts = array();
+        
+        // Add default notes from settings
+        $default_notes = $settings->get('default_notes');
+        if (!empty($default_notes)) {
+            $notes_parts[] = $default_notes;
+        }
+        
+        // Add WooCommerce order reference
+        $notes_parts[] = sprintf(
+            'Riferimento ordine WooCommerce #%s del %s',
+            $order->order_number,
+            date_i18n('d/m/Y H:i', strtotime($order->order_date))
+        );
+        
+        // Add discount information if present
+        if ($discount_total > 0 && !empty($coupon_info)) {
+            $notes_parts[] = sprintf(
+                'Sconto applicato: €%.2f (Coupon: %s)',
+                $discount_total,
+                $coupon_info['code']
+            );
+        }
+        
+        // Add marca da bollo note if applied
+        if ($bollo_applied && $bollo_amount > 0) {
+            $notes_parts[] = sprintf(
+                'Marca da bollo applicata: €%.2f (ai sensi dell\'art. 13, comma 1 della Tariffa allegata al DPR n. 642/1972)',
+                $bollo_amount
+            );
+        }
+        
+        // Add payment method if available
+        if (!empty($order->payment_method)) {
+            $notes_parts[] = 'Metodo di pagamento: ' . $order->payment_method;
+        }
+        
+        // Add currency note if not EUR
+        if ($order->currency !== 'EUR') {
+            $notes_parts[] = sprintf(
+                'Nota: Importi originali in %s. Conversione a EUR applicata.',
+                $order->currency
+            );
+        }
+        
         // Prepare invoice data
         $invoice_data = array(
             'invoice_number' => $invoice_number,
             'invoice_date' => date('Y-m-d'),
             'client_id' => $client_id,
-            'subtotal' => $order->subtotal,
-            'tax_rate' => $order->subtotal > 0 ? ($order->tax / $order->subtotal) * 100 : 0,
-            'tax_amount' => $order->tax,
-            'total' => $order->total,
+            'subtotal' => $invoice_subtotal,
+            'tax_rate' => round($tax_rate, 2),
+            'tax_amount' => $tax_amount,
+            'total' => $final_total,
             'withholding_tax' => 0,
             'withholding_amount' => 0,
-            'net_to_pay' => $order->total,
+            'net_to_pay' => $final_total,
             'payment_method' => $order->payment_method,
             'payment_terms' => $settings->get('default_payment_terms'),
-            'notes' => $this->build_invoice_notes($order, $settings),
+            'notes' => implode("\n\n", $notes_parts),
             'status' => 'draft',
             'items' => $items,
             'woo_order_id' => $order->id
@@ -548,6 +803,7 @@ class FRF_WooCommerce_Sync {
         $invoice_id = $invoice_model->create($invoice_data);
         
         if (is_wp_error($invoice_id)) {
+            error_log('FRF ERROR: Failed to create invoice: ' . $invoice_id->get_error_message());
             return $invoice_id;
         }
         

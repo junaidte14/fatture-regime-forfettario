@@ -264,15 +264,15 @@ class FRF_Admin {
     public function ajax_export_pdf() {
         // Verify nonce
         if (!isset($_GET['nonce']) || !wp_verify_nonce($_GET['nonce'], 'frf_admin_nonce')) {
-            wp_die(__('Security check failed', 'fatture-rf'));
+            wp_die(__('Security check failed', 'fatture-rf'), 'Security Error', array('response' => 403));
         }
         
         if (!current_user_can('manage_options')) {
-            wp_die(__('Unauthorized access', 'fatture-rf'));
+            wp_die(__('Unauthorized access', 'fatture-rf'), 'Unauthorized', array('response' => 403));
         }
         
         if (!isset($_GET['invoice_id'])) {
-            wp_die(__('Invalid invoice ID', 'fatture-rf'));
+            wp_die(__('Invalid invoice ID', 'fatture-rf'), 'Invalid Request', array('response' => 400));
         }
         
         $invoice_id = intval($_GET['invoice_id']);
@@ -284,18 +284,21 @@ class FRF_Admin {
         
         // Generate and output PDF
         try {
-            $result = $pdf_generator->generate($invoice_id);
+            // This will output the PDF and exit
+            $pdf_generator->generate($invoice_id);
             
-            if (is_wp_error($result)) {
-                wp_die($result->get_error_message());
+            // If we reach here and nothing was output, there was an error
+            if (!headers_sent()) {
+                wp_die(__('Error generating PDF', 'fatture-rf'), 'PDF Generation Error', array('response' => 500));
             }
             
-            // If we reach here, PDF was generated successfully
-            exit;
-            
         } catch (Exception $e) {
-            wp_die('Error generating PDF: ' . $e->getMessage());
+            error_log('FRF PDF Error: ' . $e->getMessage());
+            wp_die('Error generating PDF: ' . $e->getMessage(), 'PDF Generation Error', array('response' => 500));
         }
+        
+        // Make sure we exit after PDF output
+        exit;
     }
 
     /**

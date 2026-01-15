@@ -225,42 +225,84 @@ class FRF_Client {
     }
     
     /**
-     * Validate client data based on type
+     * Validate client data by combining direct fields with raw meta-data intelligence
      */
     private function validate_client_data($data) {
-        // Italian clients - require VAT or Tax Code
-        if ($data['client_type'] === 'IT') {
-            if (empty($data['vat_number']) && empty($data['tax_code'])) {
-                return new WP_Error('validation_error', 
-                    __('Italian clients require VAT Number or Tax Code', 'fatture-rf'));
-            }
-            
-            // Validate Partita IVA (11 digits)
-            if (!empty($data['vat_number']) && !preg_match('/^\d{11}$/', $data['vat_number'])) {
-                return new WP_Error('validation_error', 
-                    __('Invalid Italian VAT number (must be 11 digits)', 'fatture-rf'));
-            }
-            
-            // Validate Codice Fiscale (16 alphanumeric)
-            if (!empty($data['tax_code']) && !preg_match('/^[A-Z0-9]{16}$/i', $data['tax_code'])) {
-                return new WP_Error('validation_error', 
-                    __('Invalid Tax Code (must be 16 characters)', 'fatture-rf'));
-            }
-            
-            // SDI code or PEC required for electronic invoicing
-            if (empty($data['sdi_code']) && empty($data['pec_email'])) {
-                return new WP_Error('validation_error', 
-                    __('Electronic invoicing requires SDI Code or PEC', 'fatture-rf'));
+        // 1. Standard Data Extraction
+        $country    = isset($data['country']) ? strtoupper($data['country']) : ''; 
+        $vat_number = isset($data['vat_number']) ? trim($data['vat_number']) : '';
+        $tax_code   = isset($data['tax_code']) ? trim($data['tax_code']) : '';
+        $sdi_code   = isset($data['sdi_code']) ? trim($data['sdi_code']) : '';
+        $pec_email  = isset($data['pec_email']) ? trim($data['pec_email']) : '';
+
+        // 2. Intelligent Client Type Extraction (from raw_data meta)
+        $client_type = '';
+        if (isset($data['raw_data']['order']['meta_data'])) {
+            foreach ($data['raw_data']['order']['meta_data'] as $meta) {
+                if ($meta['key'] === '_forfettario_client_type') {
+                    $client_type = $meta['value'];
+                    break;
+                }
             }
         }
-        
-        // EU clients - require VAT number
-        if ($data['client_type'] === 'EU' && empty($data['vat_number'])) {
-            return new WP_Error('validation_error', 
-                __('EU clients require VAT Number', 'fatture-rf'));
+
+        // --- 3. VALIDATION LOGIC ---
+
+        // SCENARIO: ITALIAN CLIENTS
+        if ($country === 'IT') {
+            
+            // B2B: Italian Business
+            if ($client_type === 'b2b_it') {
+                if (empty($vat_number)) {
+                    return new WP_Error('validation_error', __('Italian business clients require a VAT Number.', 'fatture-rf'));
+                }
+                if (!preg_match('/^\d{11}$/', $vat_number)) {
+                    return new WP_Error('validation_error', __('Invalid Italian VAT number (11 digits required).', 'fatture-rf'));
+                }
+                // Electronic Invoicing Check (Mandatory for B2B)
+                if (empty($sdi_code) && empty($pec_email)) {
+                    return new WP_Error('validation_error', __('Electronic invoicing requires SDI Code or PEC.', 'fatture-rf'));
+                }
+            } 
+            
+            // B2C: Italian Private (Fixes your bug: SDI/PEC no longer required here)
+            else {
+                if (empty($tax_code)) {
+                    return new WP_Error('validation_error', __('Italian private clients require a Tax Code.', 'fatture-rf'));
+                }
+                if (!preg_match('/^[A-Z0-9]{16}$/i', $tax_code)) {
+                    return new WP_Error('validation_error', __('Invalid Tax Code (16 characters required).', 'fatture-rf'));
+                }
+            }
         }
-        
+
+        // SCENARIO: EU CLIENTS (NON-IT)
+        elseif ($this->is_eu_country($country)) {
+            
+            // EU Business needs VAT for Intra-Community rules
+            if ($client_type === 'b2b_eu' && empty($vat_number)) {
+                return new WP_Error('validation_error', __('EU Business clients require a VAT Number.', 'fatture-rf'));
+            }
+            
+            // EU Private (B2C) usually needs no specific fiscal validation
+        }
+
+        // SCENARIO: NON-EU (REST OF WORLD)
+        else {
+            if (empty($country)) {
+                return new WP_Error('validation_error', __('Country field is required.', 'fatture-rf'));
+            }
+        }
+
         return true;
+    }
+
+    /**
+     * Check if a country code belongs to the European Union
+     */
+    private function is_eu_country($cc) {
+        $eu_list = ['AT','BE','BG','HR','CY','CZ','DK','EE','FI','FR','DE','GR','HU','IE','LV','LT','LU','MT','NL','PL','PT','RO','SK','SI','ES','SE'];
+        return in_array($cc, $eu_list);
     }
     
     /**
